@@ -1,0 +1,8 @@
+## Append samples of your project ##
+resources:
+- infrastructure_v1beta1_ktmachinetemplate.yaml
+- infrastructure_v1beta1_ktcluster.yaml
+- infrastructure_v1beta1_cluster.yaml
+- infrastructure_v1beta1_kubeadmconfigtemplate.yaml
+- infrastructure_v1beta1_kubeadmcontrolplane.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
