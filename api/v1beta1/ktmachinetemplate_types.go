@@ -94,5 +94,5 @@ type KTMachineTemplateList struct {
 }
 
 func init() {
-	objectTypes = append(objectTypes, &KTMachineTemplate{}, &KTMachineTemplateList{})
+	SchemeBuilder.Register(&KTMachineTemplate{}, &KTMachineTemplateList{})
 }

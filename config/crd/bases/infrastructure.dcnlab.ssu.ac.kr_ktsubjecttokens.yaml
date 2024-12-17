@@ -39,8 +39,6 @@ spec:
           spec:
             description: KTSubjectTokenSpec defines the desired state of KTSubjectToken.
             properties:
-              date:
-                type: string
               subjectToken:
                 description: Foo is an example field of KTSubjectToken. Edit ktsubjecttoken_types.go
                   to remove/update

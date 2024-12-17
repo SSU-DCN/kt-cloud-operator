@@ -38,4 +38,7 @@ type Config struct {
 
 	// RemoteBackendTimeout specifies timeout. Has to be parsable to time.Duration
 	RemoteBackendTimeout time.Duration `envconfig:"REMOTE_BACKEND_TIMEOUT" default:"5s"`
+
+	// Kubeconfig specifies path to a kubeconfig file if the server is run outside of a cluster
+	Kubeconfig string `envconfig:"KUBECONFIG" default:""`
 }

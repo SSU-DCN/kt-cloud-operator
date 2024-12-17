@@ -31,7 +31,7 @@ type KTSubjectTokenSpec struct {
 	// Foo is an example field of KTSubjectToken. Edit ktsubjecttoken_types.go to remove/update
 	SubjectToken string `json:"subjectToken,omitempty"`
 	Token        Token  `json:"token,omitempty"`
-	Date         string `json:"date,omitempty"`
+	// Date         string `json:"date,omitempty"`
 }
 type Token struct {
 	ExpiresAt string `json:"expiresAt,omitempty"`
@@ -66,5 +66,5 @@ type KTSubjectTokenList struct {
 }
 
 func init() {
-	objectTypes = append(objectTypes, &KTSubjectToken{}, &KTSubjectTokenList{})
+	SchemeBuilder.Register(&KTSubjectToken{}, &KTSubjectTokenList{})
 }

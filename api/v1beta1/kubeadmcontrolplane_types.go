@@ -60,5 +60,5 @@ type KubeadmControlPlaneList struct {
 }
 
 func init() {
-	objectTypes = append(objectTypes, &KubeadmControlPlane{}, &KubeadmControlPlaneList{})
+	SchemeBuilder.Register(&KubeadmControlPlane{}, &KubeadmControlPlaneList{})
 }

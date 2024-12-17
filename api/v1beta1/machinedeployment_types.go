@@ -100,5 +100,5 @@ type MachineDeploymentList struct {
 }
 
 func init() {
-	objectTypes = append(objectTypes, &MachineDeployment{}, &MachineDeploymentList{})
+	SchemeBuilder.Register(&MachineDeployment{}, &MachineDeploymentList{})
 }
