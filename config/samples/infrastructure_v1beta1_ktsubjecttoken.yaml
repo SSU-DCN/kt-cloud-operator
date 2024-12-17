@@ -1,0 +1,9 @@
+apiVersion: infrastructure.dcnlab.ssu.ac.kr/v1beta1
+kind: KTSubjectToken
+metadata:
+  labels:
+    app.kubernetes.io/name: kt-cloud-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: ktsubjecttoken-sample
+spec:
+  # TODO(user): Add fields here

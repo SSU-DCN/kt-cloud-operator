@@ -8,6 +8,7 @@ resources:
 - bases/infrastructure.dcnlab.ssu.ac.kr_kubeadmconfigtemplates.yaml
 - bases/infrastructure.dcnlab.ssu.ac.kr_kubeadmcontrolplanes.yaml
 - bases/infrastructure.dcnlab.ssu.ac.kr_machinedeployments.yaml
+- bases/infrastructure.dcnlab.ssu.ac.kr_ktsubjecttokens.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

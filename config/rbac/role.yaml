@@ -10,6 +10,7 @@ rules:
   - clusters
   - ktclusters
   - ktmachinetemplates
+  - ktsubjecttokens
   - kubeadmconfigtemplates
   - kubeadmcontrolplanes
   - machinedeployments
@@ -27,6 +28,7 @@ rules:
   - clusters/finalizers
   - ktclusters/finalizers
   - ktmachinetemplates/finalizers
+  - ktsubjecttokens/finalizers
   - kubeadmconfigtemplates/finalizers
   - kubeadmcontrolplanes/finalizers
   - machinedeployments/finalizers
@@ -38,6 +40,7 @@ rules:
   - clusters/status
   - ktclusters/status
   - ktmachinetemplates/status
+  - ktsubjecttokens/status
   - kubeadmconfigtemplates/status
   - kubeadmcontrolplanes/status
   - machinedeployments/status

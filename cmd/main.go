@@ -37,7 +37,10 @@ import (
 
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	"dcnlab.ssu.ac.kr/kt-cloud-operator/internal/controller"
+
 	// +kubebuilder:scaffold:imports
+
+	httpapi "dcnlab.ssu.ac.kr/kt-cloud-operator/cmd/httpapi"
 )
 
 var (
@@ -118,6 +121,9 @@ func main() {
 		// this setup is not recommended for production.
 	}
 
+	// Make an auth API call
+	httpapi.KTCloudLogin()
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
@@ -182,6 +188,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MachineDeployment")
+		os.Exit(1)
+	}
+	if err = (&controller.KTSubjectTokenReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KTSubjectToken")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
