@@ -1,0 +1,27 @@
+# permissions for end users to edit machinedeployments.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: kt-cloud-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: machinedeployment-editor-role
+rules:
+- apiGroups:
+  - infrastructure.dcnlab.ssu.ac.kr
+  resources:
+  - machinedeployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - infrastructure.dcnlab.ssu.ac.kr
+  resources:
+  - machinedeployments/status
+  verbs:
+  - get

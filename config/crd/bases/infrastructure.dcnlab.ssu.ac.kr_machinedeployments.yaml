@@ -1,0 +1,107 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.4
+  name: machinedeployments.infrastructure.dcnlab.ssu.ac.kr
+spec:
+  group: infrastructure.dcnlab.ssu.ac.kr
+  names:
+    kind: MachineDeployment
+    listKind: MachineDeploymentList
+    plural: machinedeployments
+    singular: machinedeployment
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: MachineDeployment is the Schema for the machinedeployments API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MachineDeploymentSpec defines the desired state of MachineDeployment.
+            properties:
+              clusterName:
+                description: Foo is an example field of MachineDeployment. Edit machinedeployment_types.go
+                  to remove/update
+                type: string
+              replicas:
+                type: integer
+              selector:
+                description: Selector defines the labels used for matching machines
+                properties:
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
+              template:
+                properties:
+                  spec:
+                    description: MachineSpecDetails holds detailed specifications
+                      for a machine
+                    properties:
+                      bootstrap:
+                        description: Bootstrap holds bootstrap configuration reference
+                        properties:
+                          configRef:
+                            description: ConfigRef defines the reference to a bootstrap
+                              configuration
+                            properties:
+                              apiVersion:
+                                type: string
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                            type: object
+                        type: object
+                      clusterName:
+                        type: string
+                      failureDomain:
+                        type: string
+                      infrastructureRef:
+                        description: InfrastructureRef defines the infrastructure
+                          reference details
+                        properties:
+                          apiVersion:
+                            type: string
+                          kind:
+                            type: string
+                          name:
+                            type: string
+                        type: object
+                      version:
+                        type: string
+                    type: object
+                type: object
+            required:
+            - clusterName
+            - replicas
+            type: object
+          status:
+            description: MachineDeploymentStatus defines the observed state of MachineDeployment.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

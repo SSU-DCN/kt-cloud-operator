@@ -1,0 +1,90 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.4
+  name: ktmachinetemplates.infrastructure.dcnlab.ssu.ac.kr
+spec:
+  group: infrastructure.dcnlab.ssu.ac.kr
+  names:
+    kind: KTMachineTemplate
+    listKind: KTMachineTemplateList
+    plural: ktmachinetemplates
+    singular: ktmachinetemplate
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: KTMachineTemplate is the Schema for the ktmachinetemplates API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: KTMachineTemplateSpec defines the desired state of KTMachineTemplate.
+            properties:
+              metadata:
+                description: Foo is an example field of KTMachineTemplate. Edit ktmachinetemplate_types.go
+                  to remove/update
+                properties:
+                  spec:
+                    description: Spec holds details about the machine specification
+                    properties:
+                      ports:
+                        items:
+                          description: Port defines a network configuration or IP
+                            details
+                          properties:
+                            fixedIPs:
+                              items:
+                                description: FixedIP represents fixed IP information
+                                  with subnet details
+                                properties:
+                                  subnet:
+                                    description: Subnet holds the subnet ID information
+                                    properties:
+                                      id:
+                                        type: string
+                                    type: object
+                                type: object
+                              type: array
+                            network:
+                              description: Network holds the network details such
+                                as name, tags, or ID
+                              properties:
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                tags:
+                                  type: string
+                              type: object
+                          type: object
+                        type: array
+                    type: object
+                type: object
+            type: object
+          status:
+            description: KTMachineTemplateStatus defines the observed state of KTMachineTemplate.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

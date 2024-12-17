@@ -29,7 +29,41 @@ type KTMachineTemplateSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of KTMachineTemplate. Edit ktmachinetemplate_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Template Template `json:"metadata,omitempty"`
+}
+
+// define the properties of a machine
+// Template defines the properties of a machine
+type Template struct {
+	Spec Spec `json:"spec,omitempty"`
+}
+
+// Spec holds details about the machine specification
+type Spec struct {
+	Ports []Port `json:"ports,omitempty"`
+}
+
+// Port defines a network configuration or IP details
+type Port struct {
+	Network  *Network  `json:"network,omitempty"`
+	FixedIPs []FixedIP `json:"fixedIPs,omitempty"`
+}
+
+// Network holds the network details such as name, tags, or ID
+type Network struct {
+	Name string `json:"name,omitempty"`
+	Tags string `json:"tags,omitempty"`
+	ID   string `json:"id,omitempty"`
+}
+
+// FixedIP represents fixed IP information with subnet details
+type FixedIP struct {
+	Subnet *Subnet `json:"subnet,omitempty"`
+}
+
+// Subnet holds the subnet ID information
+type Subnet struct {
+	ID string `json:"id,omitempty"`
 }
 
 // KTMachineTemplateStatus defines the observed state of KTMachineTemplate.
