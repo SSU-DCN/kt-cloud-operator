@@ -18,12 +18,17 @@ package controller
 
 import (
 	"context"
+	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 )
 
@@ -49,15 +54,71 @@ type ClusterReconciler struct {
 func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	logger := log.FromContext(ctx)
+	logger.V(1).Info("KTCluster Reconcile", "ktCluster", req)
+
+	// Fetch the ktcluster instance
+	cluster := &v1beta1.Cluster{}
+	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("KTCluster resource not found. Ignoring since it must be deleted")
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "Failed to get KTCluster resource")
+		return ctrl.Result{}, err
+	}
+
+	// Check if the child resources already exists to add ownerRef
+	foundCluster := &v1beta1.Cluster{}
+	err := r.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, foundCluster)
+	if err != nil && apierrors.IsNotFound(err) {
+		// Read through the cluster Object
+		kt_clstr, err := r.ktClusterForCluster(cluster, ctx, req)
+		logger.Info("adding owner ref for ktcluster ", "KTCluster.Namespace ", kt_clstr.Namespace, " KTCluster.Name ", kt_clstr.Name)
+		if err != nil {
+			if err := r.Create(ctx, kt_clstr); err != nil {
+				logger.Error(err, "Failed to add owner ref to ", "KTCluster.Namespace ", kt_clstr.Namespace, "KTCluster.Name", kt_clstr.Name)
+				return ctrl.Result{}, err
+			}
+		}
+
+		// Requeue the request to ensure the Cluster is given Owner ref
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	} else if err != nil {
+		logger.Error(err, "Failed to get KTCluster, maybe dont have")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
+}
+
+// used to create Owner Refs
+func (r *ClusterReconciler) ktClusterForCluster(cluster *v1beta1.Cluster, ctx context.Context, req ctrl.Request) (*v1beta1.KTCluster, error) {
+	logger := log.FromContext(ctx)
+	logger.Info("Cluster Reconcile In ktClusterForCluster FN")
+
+	// Fetch the ktcluster instance
+	ktCluster := &v1beta1.KTCluster{}
+	if err := r.Get(ctx, req.NamespacedName, ktCluster); err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("Cluster resource not found. Ignoring since it might be deleted or not created")
+			return &infrastructurev1beta1.KTCluster{}, err
+		}
+		logger.Error(err, "Failed to get Cluster resource")
+		return &infrastructurev1beta1.KTCluster{}, err
+	}
+
+	// Set the ownerRef for the Cluster, ensuring that the Deployment
+	// will be deleted when the KTCluster CR is deleted.
+	controllerutil.SetControllerReference(cluster, ktCluster, r.Scheme)
+	return ktCluster, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructurev1beta1.Cluster{}).
+		Owns(&v1beta1.KTCluster{}).
 		Named("cluster").
 		Complete(r)
 }
