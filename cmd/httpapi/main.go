@@ -260,15 +260,41 @@ func createTokenObject(k8sClient client.Client, subjectToken, responseBody strin
 			},
 		},
 	}
+	ctx := context.Background()
 
 	// Use the global k8sClient to create the custom resource
-	ctx := context.Background()
-	err = k8sClient.Create(ctx, tokenObj)
+	// Check if the object already exists
+	existingTokenObj := &v1beta1.KTSubjectToken{}
+	err = k8sClient.Get(ctx, client.ObjectKey{
+		Name:      tokenObj.Name,
+		Namespace: tokenObj.Namespace,
+	}, existingTokenObj)
 	if err != nil {
-		logger1.Fatalf("Failed to create KTSubjectToken object: %v", err)
+		if client.IgnoreNotFound(err) == nil {
+			// Object does not exist, create it
+			logger1.Info("KTSubjectToken does not exist, creating a new one")
+			err = k8sClient.Create(ctx, tokenObj)
+			if err != nil {
+				logger1.Errorf("Failed to create KTSubjectToken object: %v", err)
+				return
+			}
+			logger1.Info("KTSubjectToken object created successfully!")
+		} else {
+			// Error fetching object
+			logger1.Errorf("Failed to fetch KTSubjectToken object: %v", err)
+			return
+		}
+	} else {
+		// Object exists, update it
+		logger1.Info("KTSubjectToken already exists, updating it")
+		existingTokenObj.Spec = tokenObj.Spec
+		err = k8sClient.Update(ctx, existingTokenObj)
+		if err != nil {
+			logger1.Errorf("Failed to update KTSubjectToken object: %v", err)
+			return
+		}
+		logger1.Info("KTSubjectToken object updated successfully!")
 	}
-
-	logger1.Info("KTSubjectToken object created successfully!")
 
 }
 
