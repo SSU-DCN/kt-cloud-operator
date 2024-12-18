@@ -108,8 +108,8 @@ func (r *ClusterReconciler) ktClusterForCluster(cluster *v1beta1.Cluster, ctx co
 		return &infrastructurev1beta1.KTCluster{}, err
 	}
 
-	// Set the ownerRef for the Cluster, ensuring that the Deployment
-	// will be deleted when the KTCluster CR is deleted.
+	// Set the ownerRef for the KTCluster
+	// will be deleted when the Cluster CR is deleted.
 	controllerutil.SetControllerReference(cluster, ktCluster, r.Scheme)
 	return ktCluster, nil
 }
