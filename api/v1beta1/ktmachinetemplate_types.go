@@ -40,7 +40,18 @@ type Template struct {
 
 // Spec holds details about the machine specification
 type Spec struct {
-	Ports []Port `json:"ports,omitempty"`
+	Flavor             string               `json:"flavor,omitempty"`
+	SSHKeyName         string               `json:"sshKeyName,omitempty"`
+	BlockDeviceMapping []BlockDeviceMapping `json:"blockDeviceMapping,omitempty"`
+	Ports              []Port               `json:"ports,omitempty"`
+}
+
+type BlockDeviceMapping struct {
+	DestinationType string `json:"destinationType,omitempty"`
+	BootIndex       int    `json:"bootIndex,omitempty"`
+	SourceType      string `json:"sourceType,omitempty"`
+	VolumeSize      int    `json:"volumeSize,omitempty"`
+	ID              int    `json:"id,omitempty"`
 }
 
 // Port defines a network configuration or IP details

@@ -1,0 +1,18 @@
+apiVersion: infrastructure.dcnlab.ssu.ac.kr/v1beta1
+kind: KTMachineTemplate
+metadata:
+  labels:
+    app.kubernetes.io/name: kt-cloud-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: ktmachinetemplate-sample
+spec:
+  template:
+    spec:
+      flavor: a12c8f89-e8f7-4f68-9c00-e376f9a1ab8d
+      blockDeviceMapping:
+        - id: 17478d4f-baa6-4b2c-bb3b-b1bbdb4977c5
+          bootIndex: 0
+          sourceType: image
+          volumeSize: 50
+          destinationType: volume
+      sshKeyName: test1

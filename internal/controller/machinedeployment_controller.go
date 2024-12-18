@@ -22,8 +22,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 )
 
@@ -49,7 +51,8 @@ type MachineDeploymentReconciler struct {
 func (r *MachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	logger := log.FromContext(ctx)
+	logger.V(1).Info("MachineDeployment Reconcile", "machineDeployment", req)
 
 	return ctrl.Result{}, nil
 }
@@ -58,6 +61,14 @@ func (r *MachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 func (r *MachineDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructurev1beta1.MachineDeployment{}).
+		Watches(
+			&v1beta1.KTCluster{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1beta1.MachineDeployment{}),
+		).
+		Watches(
+			&v1beta1.KTMachineTemplate{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1beta1.MachineDeployment{}),
+		).
 		Named("machinedeployment").
 		Complete(r)
 }

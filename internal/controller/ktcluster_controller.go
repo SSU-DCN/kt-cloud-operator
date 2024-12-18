@@ -50,6 +50,8 @@ func (r *KTClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
+	logger := log.FromContext(ctx)
+	logger.V(1).Info("KTCluster Reconcile", "ktCluster", req)
 
 	return ctrl.Result{}, nil
 }

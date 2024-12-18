@@ -50,6 +50,8 @@ func (r *KTMachineTemplateReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
+	logger := log.FromContext(ctx)
+	logger.V(1).Info("KTMachineTemplate Reconcile", "ktMachineTemplate", req)
 
 	return ctrl.Result{}, nil
 }

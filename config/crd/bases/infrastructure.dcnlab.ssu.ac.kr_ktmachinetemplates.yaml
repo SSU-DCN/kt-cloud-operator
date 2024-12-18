@@ -46,6 +46,23 @@ spec:
                   spec:
                     description: Spec holds details about the machine specification
                     properties:
+                      blockDeviceMapping:
+                        items:
+                          properties:
+                            bootIndex:
+                              type: integer
+                            destinationType:
+                              type: string
+                            id:
+                              type: integer
+                            sourceType:
+                              type: string
+                            volumeSize:
+                              type: integer
+                          type: object
+                        type: array
+                      flavor:
+                        type: string
                       ports:
                         items:
                           description: Port defines a network configuration or IP
@@ -77,6 +94,8 @@ spec:
                               type: object
                           type: object
                         type: array
+                      sshKeyName:
+                        type: string
                     type: object
                 type: object
             type: object
