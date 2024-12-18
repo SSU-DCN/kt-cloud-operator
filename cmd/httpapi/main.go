@@ -296,10 +296,10 @@ func getRestConfig(kubeconfigPath string) (*rest.Config, error) {
 
 // getClient initializes a controller-runtime Manager and returns the client it uses.
 func getClient(config *rest.Config, scheme *runtime.Scheme) (client.Client, error) {
-	c, err := client.New(config, client.Options{Scheme: scheme})
-	if err != nil {
-		return nil, err
+	// Register your custom resource's types
+	if err := v1beta1.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to add custom resources to scheme: %v", err)
 	}
 
-	return c, nil
+	return client.New(config, client.Options{Scheme: scheme})
 }

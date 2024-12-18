@@ -102,5 +102,5 @@ type KTClusterList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&KTCluster{}, &KTClusterList{})
+	objectTypes = append(objectTypes, &KTCluster{}, &KTClusterList{})
 }

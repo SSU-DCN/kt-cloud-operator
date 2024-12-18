@@ -18,6 +18,8 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -66,5 +68,7 @@ type KTSubjectTokenList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&KTSubjectToken{}, &KTSubjectTokenList{})
+	objectTypes = append(objectTypes, &KTSubjectToken{}, &KTSubjectTokenList{})
+	utilruntime.Must(AddToScheme(runtime.NewScheme())) // Ensure it's registered
+
 }
