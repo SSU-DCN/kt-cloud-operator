@@ -42,6 +42,9 @@ type Token struct {
 type KTSubjectTokenStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	SubjectToken string `json:"subjectToken,omitempty"`
+	Token        Token  `json:"token,omitempty"`
+	CreatedAt    string `json:"createdAt,omitempty"` //The time logged successfully from KTCloud
 }
 
 // +kubebuilder:object:root=true

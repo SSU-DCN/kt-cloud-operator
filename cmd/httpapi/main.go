@@ -259,6 +259,14 @@ func createTokenObject(k8sClient client.Client, subjectToken, responseBody strin
 				IsDomain:  isDomain.(bool),
 			},
 		},
+		Status: v1beta1.KTSubjectTokenStatus{
+			SubjectToken: subjectToken,
+			Token: v1beta1.Token{
+				ExpiresAt: expiresAt.(string),
+				IsDomain:  isDomain.(bool),
+			},
+			CreatedAt: time.Now().UTC().Format("2006-01-02T15:04:05.000000Z"),
+		},
 	}
 	ctx := context.Background()
 
@@ -287,8 +295,8 @@ func createTokenObject(k8sClient client.Client, subjectToken, responseBody strin
 	} else {
 		// Object exists, update it
 		logger1.Info("KTSubjectToken already exists, updating it")
-		existingTokenObj.Spec = tokenObj.Spec
-		err = k8sClient.Update(ctx, existingTokenObj)
+		existingTokenObj.Status = tokenObj.Status
+		err = k8sClient.Status().Update(ctx, existingTokenObj)
 		if err != nil {
 			logger1.Errorf("Failed to update KTSubjectToken object: %v", err)
 			return

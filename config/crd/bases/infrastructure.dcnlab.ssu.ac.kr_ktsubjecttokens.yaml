@@ -53,6 +53,21 @@ spec:
             type: object
           status:
             description: KTSubjectTokenStatus defines the observed state of KTSubjectToken.
+            properties:
+              createdAt:
+                type: string
+              subjectToken:
+                description: |-
+                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+                  Important: Run "make" to regenerate code after modifying this file
+                type: string
+              token:
+                properties:
+                  expiresAt:
+                    type: string
+                  isDomain:
+                    type: boolean
+                type: object
             type: object
         type: object
     served: true
