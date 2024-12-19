@@ -9,6 +9,7 @@ rules:
   resources:
   - clusters
   - ktclusters
+  - ktmachines
   - ktmachinetemplates
   - ktsubjecttokens
   - kubeadmconfigtemplates
@@ -27,6 +28,7 @@ rules:
   resources:
   - clusters/finalizers
   - ktclusters/finalizers
+  - ktmachines/finalizers
   - ktmachinetemplates/finalizers
   - ktsubjecttokens/finalizers
   - kubeadmconfigtemplates/finalizers
@@ -39,6 +41,7 @@ rules:
   resources:
   - clusters/status
   - ktclusters/status
+  - ktmachines/status
   - ktmachinetemplates/status
   - ktsubjecttokens/status
   - kubeadmconfigtemplates/status

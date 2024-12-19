@@ -7,4 +7,5 @@ resources:
 - infrastructure_v1beta1_kubeadmcontrolplane.yaml
 - infrastructure_v1beta1_machinedeployment.yaml
 - infrastructure_v1beta1_ktsubjecttoken.yaml
+- infrastructure_v1beta1_ktmachine.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

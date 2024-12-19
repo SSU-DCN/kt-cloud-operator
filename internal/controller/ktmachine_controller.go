@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,45 +27,37 @@ import (
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 )
 
-// MachineDeploymentReconciler reconciles a MachineDeployment object
-type MachineDeploymentReconciler struct {
+// KTMachineReconciler reconciles a KTMachine object
+type KTMachineReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-const (
-	waitForClusterInfrastructureReadyDuration = 15 * time.Second
-	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
-	waitForBuildingInstanceToReconcile        = 10 * time.Second
-	deleteServerRequeueDelay                  = 10 * time.Second
-)
-
-// +kubebuilder:rbac:groups=infrastructure.dcnlab.ssu.ac.kr,resources=machinedeployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=infrastructure.dcnlab.ssu.ac.kr,resources=machinedeployments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=infrastructure.dcnlab.ssu.ac.kr,resources=machinedeployments/finalizers,verbs=update
+// +kubebuilder:rbac:groups=infrastructure.dcnlab.ssu.ac.kr,resources=ktmachines,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=infrastructure.dcnlab.ssu.ac.kr,resources=ktmachines/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=infrastructure.dcnlab.ssu.ac.kr,resources=ktmachines/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the MachineDeployment object against the actual cluster state, and then
+// the KTMachine object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
-func (r *MachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	logger := log.FromContext(ctx)
-	logger.V(1).Info("MachineDeployment Reconcile", "machineDeployment", req)
+	// TODO(user): your logic here
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *MachineDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *KTMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&infrastructurev1beta1.MachineDeployment{}).
-		Named("machinedeployment").
+		For(&infrastructurev1beta1.KTMachine{}).
+		Named("ktmachine").
 		Complete(r)
 }
