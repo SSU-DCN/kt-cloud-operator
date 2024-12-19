@@ -59,14 +59,6 @@ func (r *MachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 func (r *MachineDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructurev1beta1.MachineDeployment{}).
-		// Watches(
-		// 	&v1beta1.KTCluster{},
-		// 	handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1beta1.MachineDeployment{}),
-		// ).
-		// Watches(
-		// 	&v1beta1.KTMachineTemplate{},
-		// 	handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1beta1.MachineDeployment{}),
-		// ).
 		Named("machinedeployment").
 		Complete(r)
 }

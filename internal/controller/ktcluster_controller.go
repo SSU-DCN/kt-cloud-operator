@@ -18,12 +18,15 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
@@ -50,13 +53,10 @@ type KTClusterReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
 func (r *KTClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
 	logger := log.FromContext(ctx)
 	logger.V(1).Info("KTCluster Reconcile", "ktCluster", req)
 
-	// Fetch the ktcluster instance
+	// Fetch the KTCluster instance
 	ktcluster := &v1beta1.KTCluster{}
 	if err := r.Get(ctx, req.NamespacedName, ktcluster); err != nil {
 		if apierrors.IsNotFound(err) {
@@ -67,14 +67,63 @@ func (r *KTClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	// Fetch child resources
+	foundKTMachineTemplateCP, err := r.fetchMachineTemplate(ctx, ktcluster, "-control-plane")
+	if err != nil {
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	}
+
+	foundKTMachineTemplateMD, err := r.fetchMachineTemplate(ctx, ktcluster, "-md-0")
+	if err != nil {
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	}
+
+	// Add owner references
+	if err := r.ktClusterForMachineTemplate(ktcluster, foundKTMachineTemplateCP, ctx, req); err != nil {
+		logger.Error(err, "Failed to add owner ref to CP", "KTMachineTemplate.Namespace", foundKTMachineTemplateCP.Namespace, "KTMachineTemplate.Name", foundKTMachineTemplateCP.Name)
+		return ctrl.Result{}, err
+	}
+
+	if err := r.ktClusterForMachineTemplate(ktcluster, foundKTMachineTemplateMD, ctx, req); err != nil {
+		logger.Error(err, "Failed to add owner ref to MD", "KTMachineTemplate.Namespace", foundKTMachineTemplateMD.Namespace, "KTMachineTemplate.Name", foundKTMachineTemplateMD.Name)
+		return ctrl.Result{}, err
+	}
+
+	logger.Info("Successfully added owner references", "KTCluster.Name", ktcluster.Name)
 	return ctrl.Result{}, nil
+}
+
+func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluster *v1beta1.KTCluster, suffix string) (*v1beta1.KTMachineTemplate, error) {
+	logger := log.FromContext(ctx)
+	templateName := ktcluster.Name + suffix
+	machineTemplate := &v1beta1.KTMachineTemplate{}
+	err := r.Get(ctx, types.NamespacedName{Name: templateName, Namespace: ktcluster.Namespace}, machineTemplate)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("MachineTemplate not found", "Name", templateName, "Namespace", ktcluster.Namespace)
+			return nil, err
+		}
+		logger.Error(err, "Failed to fetch MachineTemplate", "Name", templateName, "Namespace", ktcluster.Namespace)
+		return nil, err
+	}
+	return machineTemplate, nil
+}
+
+func (r *KTClusterReconciler) ktClusterForMachineTemplate(ktCluster *v1beta1.KTCluster, ktMachineTemplate *v1beta1.KTMachineTemplate, ctx context.Context, req ctrl.Request) error {
+	logger := log.FromContext(ctx)
+	logger.Info("adding owner ref for machine ", "KTMachineTemplate.Namespace ", ktMachineTemplate.Namespace, " KTMachineTemplate.Name ", ktMachineTemplate.Name)
+
+	// Set the ownerRef for the KTCluster
+	// will be deleted when the Cluster CR is deleted.
+	controllerutil.SetControllerReference(ktCluster, ktMachineTemplate, r.Scheme)
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *KTClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructurev1beta1.KTCluster{}).
-		Owns(&v1beta1.MachineDeployment{}).
+		Owns(&v1beta1.KTMachineTemplate{}).
 		Named("ktcluster").
 		Complete(r)
 }
