@@ -100,10 +100,10 @@ func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluste
 	err := r.Get(ctx, types.NamespacedName{Name: templateName, Namespace: ktcluster.Namespace}, machineTemplate)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Info("MachineTemplate not found", "Name", templateName, "Namespace", ktcluster.Namespace)
+			logger.Info("MachineTemplate not found for "+templateName, "Name", templateName, "Namespace", ktcluster.Namespace)
 			return nil, err
 		}
-		logger.Error(err, "Failed to fetch MachineTemplate", "Name", templateName, "Namespace", ktcluster.Namespace)
+		logger.Error(err, "Failed to fetch MachineTemplate "+templateName, "Name", templateName, "Namespace", ktcluster.Namespace)
 		return nil, err
 	}
 	return machineTemplate, nil

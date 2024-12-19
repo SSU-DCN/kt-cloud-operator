@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/name: kt-cloud-operator
     app.kubernetes.io/managed-by: kustomize
-  name: ktcluster-sample
+  name: edge01
 spec:
   apiServerLoadBalancer:
     enabled: false
@@ -12,7 +12,7 @@ spec:
     id: 7031a1e3-7435-4cd2-9087-671a995f3bbd
   identityRef:
     cloudName: openstack
-    name: openstack-nephio-cloud-config
+    name: edge01-cloud-config
   managedSecurityGroups:
     allNodesSecurityGroupRules:
     - description: Created by cluster-api-provider-openstack - BGP (calico)

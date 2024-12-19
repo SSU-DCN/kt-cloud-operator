@@ -39,7 +39,7 @@ spec:
           spec:
             description: KTMachineTemplateSpec defines the desired state of KTMachineTemplate.
             properties:
-              metadata:
+              template:
                 description: Foo is an example field of KTMachineTemplate. Edit ktmachinetemplate_types.go
                   to remove/update
                 properties:
@@ -54,7 +54,7 @@ spec:
                             destinationType:
                               type: string
                             id:
-                              type: integer
+                              type: string
                             sourceType:
                               type: string
                             volumeSize:

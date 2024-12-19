@@ -29,7 +29,7 @@ type KTMachineTemplateSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of KTMachineTemplate. Edit ktmachinetemplate_types.go to remove/update
-	Template Template `json:"metadata,omitempty"`
+	Template Template `json:"template,omitempty"`
 }
 
 // define the properties of a machine
@@ -51,7 +51,7 @@ type BlockDeviceMapping struct {
 	BootIndex       int    `json:"bootIndex,omitempty"`
 	SourceType      string `json:"sourceType,omitempty"`
 	VolumeSize      int    `json:"volumeSize,omitempty"`
-	ID              int    `json:"id,omitempty"`
+	ID              string `json:"id,omitempty"`
 }
 
 // Port defines a network configuration or IP details
