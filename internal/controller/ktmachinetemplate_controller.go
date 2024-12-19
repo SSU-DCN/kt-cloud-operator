@@ -99,7 +99,14 @@ func (r *KTMachineTemplateReconciler) ktMachineTemplateForMachineDeployment(ktMa
 
 	// Set the ownerRef for the KTCluster
 	// will be deleted when the Cluster CR is deleted.
-	controllerutil.SetControllerReference(ktMachineTemplate, machineDeployment, r.Scheme)
+	// controllerutil.SetControllerReference(ktMachineTemplate, machineDeployment, r.Scheme)
+	if err := controllerutil.SetControllerReference(ktMachineTemplate, machineDeployment, r.Scheme); err != nil {
+		return err
+	}
+
+	if err := r.Client.Update(ctx, machineDeployment); err != nil {
+		return err
+	}
 	return nil
 }
 

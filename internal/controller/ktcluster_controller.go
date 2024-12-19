@@ -68,44 +68,47 @@ func (r *KTClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// Fetch child resources
-	foundKTMachineTemplateCP, err := r.fetchMachineTemplate(ctx, ktcluster, "-control-plane")
+	foundKTMachineTemplateCP, err := r.fetchMachineTemplate(ctx, ktcluster, "-control-plane", req)
 	if err != nil {
-		return ctrl.Result{RequeueAfter: time.Minute}, nil
+		logger.Error(err, "Failed to find control-plane machine template")
+		return ctrl.Result{}, nil // Or return an error if this is critical
 	}
 
-	foundKTMachineTemplateMD, err := r.fetchMachineTemplate(ctx, ktcluster, "-md-0")
+	foundKTMachineTemplateMD, err := r.fetchMachineTemplate(ctx, ktcluster, "-md-0", req)
 	if err != nil {
-		return ctrl.Result{RequeueAfter: time.Minute}, nil
+		logger.Error(err, "Failed to find -md-0 machine template")
+		return ctrl.Result{}, nil // Or return an error if this is critical
 	}
 
-	// Add owner references
-	if err := r.ktClusterForMachineTemplate(ktcluster, foundKTMachineTemplateCP, ctx, req); err != nil {
-		logger.Error(err, "Failed to add owner ref to CP", "KTMachineTemplate.Namespace", foundKTMachineTemplateCP.Namespace, "KTMachineTemplate.Name", foundKTMachineTemplateCP.Name)
-		return ctrl.Result{}, err
-	}
-
-	if err := r.ktClusterForMachineTemplate(ktcluster, foundKTMachineTemplateMD, ctx, req); err != nil {
-		logger.Error(err, "Failed to add owner ref to MD", "KTMachineTemplate.Namespace", foundKTMachineTemplateMD.Namespace, "KTMachineTemplate.Name", foundKTMachineTemplateMD.Name)
-		return ctrl.Result{}, err
+	// Check if any required machine template is missing
+	if foundKTMachineTemplateCP == nil || foundKTMachineTemplateMD == nil {
+		logger.Info("One or more machine templates are missing. Requeuing...")
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
 	logger.Info("Successfully added owner references", "KTCluster.Name", ktcluster.Name)
 	return ctrl.Result{}, nil
 }
 
-func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluster *v1beta1.KTCluster, suffix string) (*v1beta1.KTMachineTemplate, error) {
+func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluster *v1beta1.KTCluster, suffix string, req ctrl.Request) (*v1beta1.KTMachineTemplate, error) {
 	logger := log.FromContext(ctx)
-	templateName := ktcluster.Name + suffix
+	templateName := string(ktcluster.Name + suffix)
 	machineTemplate := &v1beta1.KTMachineTemplate{}
 	err := r.Get(ctx, types.NamespacedName{Name: templateName, Namespace: ktcluster.Namespace}, machineTemplate)
+
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Info("MachineTemplate not found for "+templateName, "Name", templateName, "Namespace", ktcluster.Namespace)
 			return nil, err
 		}
-		logger.Error(err, "Failed to fetch MachineTemplate "+templateName, "Name", templateName, "Namespace", ktcluster.Namespace)
 		return nil, err
 	}
+
+	// Add owner references
+	if err := r.ktClusterForMachineTemplate(ktcluster, machineTemplate, ctx, req); err != nil {
+		logger.Error(err, "Failed to add owner reference to control-plane machine template")
+	}
+
 	return machineTemplate, nil
 }
 
@@ -115,7 +118,17 @@ func (r *KTClusterReconciler) ktClusterForMachineTemplate(ktCluster *v1beta1.KTC
 
 	// Set the ownerRef for the KTCluster
 	// will be deleted when the Cluster CR is deleted.
-	controllerutil.SetControllerReference(ktCluster, ktMachineTemplate, r.Scheme)
+	// controllerutil.SetControllerReference(ktCluster, ktMachineTemplate, r.Scheme)
+	if err := controllerutil.SetControllerReference(ktCluster, ktMachineTemplate, r.Scheme); err != nil {
+		logger.Error(err, "Failed to set ktmachine template owner reference")
+		return err
+	}
+
+	if err := r.Client.Update(ctx, ktMachineTemplate); err != nil {
+		logger.Error(err, "Can't update for ktmachine template owner reference")
+		return err
+	}
+
 	return nil
 }
 

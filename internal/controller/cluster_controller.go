@@ -97,7 +97,28 @@ func (r *ClusterReconciler) ktClusterForCluster(cluster *v1beta1.Cluster, ktClus
 
 	// Set the ownerRef for the KTCluster
 	// will be deleted when the Cluster CR is deleted.
-	controllerutil.SetControllerReference(cluster, ktCluster, r.Scheme)
+	if err := controllerutil.SetControllerReference(cluster, ktCluster, r.Scheme); err != nil {
+		return err
+	}
+
+	// ownerRef = &v1beta1.KTCluster{
+	// 	ObjectMeta: metav1.ObjectMeta{
+	// 		OwnerReferences: []metav1.OwnerReference{
+	// 			{
+	// 				APIVersion: cluster.APIVersion,
+	// 				Kind:       cluster.Kind,
+	// 				Name:       cluster.Name,
+	// 				UID:        cluster.UID,
+	// 			},
+	// 		},
+	// 		// Finalizers: []string{infrav1.IPClaimMachineFinalizer},
+	// 	},
+	// }
+	// Save the changes
+	if err := r.Client.Update(ctx, ktCluster); err != nil {
+		return err
+	}
+
 	return nil
 }
 
