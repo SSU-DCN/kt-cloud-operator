@@ -39,13 +39,70 @@ spec:
           spec:
             description: KTMachineSpec defines the desired state of KTMachine.
             properties:
-              foo:
+              availabilityZone:
+                type: string
+              blockDeviceMapping:
+                items:
+                  properties:
+                    bootIndex:
+                      type: integer
+                    destinationType:
+                      type: string
+                    id:
+                      type: string
+                    sourceType:
+                      type: string
+                    volumeSize:
+                      type: integer
+                  type: object
+                type: array
+              flavor:
                 description: Foo is an example field of KTMachine. Edit ktmachine_types.go
                   to remove/update
+                type: string
+              ports:
+                items:
+                  description: Port defines a network configuration or IP details
+                  properties:
+                    fixedIPs:
+                      items:
+                        description: FixedIP represents fixed IP information with
+                          subnet details
+                        properties:
+                          subnet:
+                            description: Subnet holds the subnet ID information
+                            properties:
+                              id:
+                                type: string
+                            type: object
+                        type: object
+                      type: array
+                    network:
+                      description: Network holds the network details such as name,
+                        tags, or ID
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        tags:
+                          type: string
+                      type: object
+                  type: object
+                type: array
+              sshKeyName:
+                type: string
+              userData:
                 type: string
             type: object
           status:
             description: KTMachineStatus defines the observed state of KTMachine.
+            properties:
+              id:
+                description: |-
+                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+                  Important: Run "make" to regenerate code after modifying this file
+                type: string
             type: object
         type: object
     served: true

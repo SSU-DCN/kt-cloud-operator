@@ -76,7 +76,7 @@ func (r *KTClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	foundKTMachineTemplateMD, err := r.fetchMachineTemplate(ctx, ktcluster, "-md-0", req)
 	if err != nil {
-		logger.Error(err, "Failed to find -md-0 machine template")
+		logger.Error(err, "Failed to find -md-0 machine template", "ktCluster", ktcluster.Name, "namespace", ktcluster.Namespace)
 		return ctrl.Result{}, nil // Or return an error if this is critical
 	}
 
@@ -91,7 +91,8 @@ func (r *KTClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluster *v1beta1.KTCluster, suffix string, req ctrl.Request) (*v1beta1.KTMachineTemplate, error) {
-	logger := log.FromContext(ctx)
+	logger := log.FromContext(ctx, "LogFrom", "KTCluster")
+
 	templateName := string(ktcluster.Name + suffix)
 	machineTemplate := &v1beta1.KTMachineTemplate{}
 	err := r.Get(ctx, types.NamespacedName{Name: templateName, Namespace: ktcluster.Namespace}, machineTemplate)
@@ -113,7 +114,8 @@ func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluste
 }
 
 func (r *KTClusterReconciler) ktClusterForMachineTemplate(ktCluster *v1beta1.KTCluster, ktMachineTemplate *v1beta1.KTMachineTemplate, ctx context.Context, req ctrl.Request) error {
-	logger := log.FromContext(ctx)
+	logger := log.FromContext(ctx, "LogFrom", "KTCluster")
+
 	logger.Info("adding owner ref for machine ", "KTMachineTemplate.Namespace ", ktMachineTemplate.Namespace, " KTMachineTemplate.Name ", ktMachineTemplate.Name)
 
 	// Set the ownerRef for the KTCluster

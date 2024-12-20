@@ -55,11 +55,12 @@ func (r *KTMachineTemplateReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
-	logger := log.FromContext(ctx)
+	logger := log.FromContext(ctx, "LogFrom", "KTMachineTemplate")
 	logger.V(1).Info("KTMachineTemplate Reconcile", "ktMachineTemplate", req)
 
 	// Fetch the ktMachineTemplate instance
 	ktMachineTemplate := &v1beta1.KTMachineTemplate{}
+
 	if err := r.Get(ctx, req.NamespacedName, ktMachineTemplate); err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Info("ktMachineTemplate resource not found. Ignoring since it must be deleted")
@@ -71,6 +72,7 @@ func (r *KTMachineTemplateReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	// check child resources and add owner references
 	foundMachineDeployment := &v1beta1.MachineDeployment{}
+
 	err := r.Get(ctx, types.NamespacedName{Name: ktMachineTemplate.Name, Namespace: ktMachineTemplate.Namespace}, foundMachineDeployment)
 	if err != nil && apierrors.IsNotFound(err) {
 		logger.Info("MachineDeployment not found matching machine template")
@@ -94,7 +96,9 @@ func (r *KTMachineTemplateReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 // used to create Owner Refs
 func (r *KTMachineTemplateReconciler) ktMachineTemplateForMachineDeployment(ktMachineTemplate *v1beta1.KTMachineTemplate, machineDeployment *v1beta1.MachineDeployment, ctx context.Context, req ctrl.Request) error {
-	logger := log.FromContext(ctx)
+	logger := log.FromContext(ctx, "LogFrom", "KTMachineTemplate")
+	log.FromContext(ctx, "KTMachineTemplate", ktMachineTemplate.Name, "KTMachineTemplate Namespace", ktMachineTemplate.Namespace)
+
 	logger.Info("adding owner ref for machine ", "MachineDeployment.Namespace ", ktMachineTemplate.Namespace, " MachineDeployment.Name ", ktMachineTemplate.Name)
 
 	// Set the ownerRef for the KTCluster

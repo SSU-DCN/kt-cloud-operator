@@ -39,11 +39,10 @@ spec:
           spec:
             description: MachineDeploymentSpec defines the desired state of MachineDeployment.
             properties:
-              clusterName:
-                description: Foo is an example field of MachineDeployment. Edit machinedeployment_types.go
-                  to remove/update
-                type: string
               replicas:
+                description: |-
+                  Foo is an example field of MachineDeployment. Edit machinedeployment_types.go to remove/update
+                  ClusterName string      `json:"clusterName"`
                 type: integer
               selector:
                 description: Selector defines the labels used for matching machines
@@ -94,7 +93,6 @@ spec:
                     type: object
                 type: object
             required:
-            - clusterName
             - replicas
             type: object
           status:

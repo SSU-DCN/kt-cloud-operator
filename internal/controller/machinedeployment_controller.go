@@ -18,7 +18,7 @@ package controller
 
 import (
 	"context"
-	"fmt"
+	"strings"
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -65,7 +65,7 @@ const (
 func (r *MachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	logger := log.FromContext(ctx)
+	logger := log.FromContext(ctx, "LogFrom", "MachineDeployment")
 	logger.V(1).Info("MachineDeployment Reconcile", "machineDeployment", req)
 
 	// Fetch the MachineDeployment instance
@@ -80,26 +80,26 @@ func (r *MachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	}
 
 	// create child resources and add owner references
-	countMachines, err := r.countChildMachinesByOwner(ctx, machineDeployment)
+	countMachinesAvailable, err := r.countChildMachinesByOwner(ctx, machineDeployment)
 	if err != nil {
 		logger.Error(err, "Failed to get Machines for deployment, maybe dont have")
-		return ctrl.Result{}, err
-	} else if countMachines != machineDeployment.Spec.Replicas {
+
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	} else if countMachinesAvailable != machineDeployment.Spec.Replicas {
 		logger.Info("KTMachines not found matching machine deployment replicas, we have to create a new one")
-		err := r.ktMachineForMachineDeployment(ctx, machineDeployment)
+		err := r.ktMachineForMachineDeployment(ctx, machineDeployment, countMachinesAvailable)
 		if err != nil {
 			logger.Error(err, "Failed to find KTMachineTemplate to create Machine from MachineDeployment", "MachineDeployment.Namespace", machineDeployment.Namespace, "MachineDeployment.Name", machineDeployment.Name)
 			return ctrl.Result{}, err
 		}
-
-		return ctrl.Result{RequeueAfter: time.Minute}, nil
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *MachineDeploymentReconciler) ktMachineForMachineDeployment(ctx context.Context, machineDeployment *v1beta1.MachineDeployment) error {
-	logger := log.FromContext(ctx)
+func (r *MachineDeploymentReconciler) ktMachineForMachineDeployment(ctx context.Context, machineDeployment *v1beta1.MachineDeployment, countMachinesAvailable int) error {
+	logger := log.FromContext(ctx, "LogFrom", "MachineDeployment")
 
 	foundKTMachineTemplate := &v1beta1.KTMachineTemplate{}
 	err := r.Get(ctx, types.NamespacedName{Name: machineDeployment.Name, Namespace: machineDeployment.Namespace}, foundKTMachineTemplate)
@@ -108,8 +108,17 @@ func (r *MachineDeploymentReconciler) ktMachineForMachineDeployment(ctx context.
 		return err
 	}
 
-	for i := 0; i < machineDeployment.Spec.Replicas; i++ {
-		machineName := machineDeployment.Name + utils.RandomString(10)
+	machinesToCreate := 0
+	if countMachinesAvailable < machineDeployment.Spec.Replicas {
+		machinesToCreate = machineDeployment.Spec.Replicas - countMachinesAvailable
+	} else if countMachinesAvailable > machineDeployment.Spec.Replicas {
+
+	} else {
+		machinesToCreate = machineDeployment.Spec.Replicas
+	}
+
+	for i := 0; i < machinesToCreate; i++ {
+		machineName := machineDeployment.Name + strings.ToLower(utils.RandomString(10))
 
 		machine := &v1beta1.KTMachine{
 			ObjectMeta: metav1.ObjectMeta{
@@ -143,10 +152,13 @@ func (r *MachineDeploymentReconciler) ktMachineForMachineDeployment(ctx context.
 }
 
 func (r *MachineDeploymentReconciler) countChildMachinesByOwner(ctx context.Context, machineDeployment *v1beta1.MachineDeployment) (int, error) {
+	logger := log.FromContext(ctx, "LogFrom", "MachineDeployment")
+
 	ktMachineList := &v1beta1.KTMachineList{}
 	err := r.List(ctx, ktMachineList, client.InNamespace(machineDeployment.Namespace))
 	if err != nil {
-		return 0, fmt.Errorf("failed to list KTMachines: %w", err)
+		logger.Error(err, "failed to list KTMachines")
+		return 0, err
 	}
 
 	// Filter by ownerReferences

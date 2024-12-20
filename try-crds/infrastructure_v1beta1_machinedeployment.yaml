@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: edge01-control-plane
 spec:
-  clusterName: openstack-nephio
   replicas: 1
   selector:
     matchLabels: null
