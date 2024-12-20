@@ -60,6 +60,13 @@ spec:
                 description: Foo is an example field of KTMachine. Edit ktmachine_types.go
                   to remove/update
                 type: string
+              networks:
+                items:
+                  properties:
+                    id:
+                      type: string
+                  type: object
+                type: array
               ports:
                 items:
                   description: Port defines a network configuration or IP details

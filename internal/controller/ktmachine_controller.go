@@ -118,12 +118,12 @@ func (r *KTMachineReconciler) getSubjectToken(ctx context.Context, ktMachine *in
 	// KTMachineTemplate is owned by KTCluster and KTMachineTemplate.Name = MachineDeployment.Name, KTMachineTemplate.NameSpace = MachineDeployment.NameSpace
 	// therefore, use MachineDeployment to MachineTemplate to find Cluster then token for the cluster
 	if ownerMachineDeployment.UID != "" {
-		ktMachineTemplate := &v1beta1.KTMachine{}
+		ktMachineTemplate := &v1beta1.KTMachineTemplate{}
 		err := r.Get(ctx, types.NamespacedName{Name: ownerMachineDeployment.Name, Namespace: ownerMachineDeployment.Namespace}, ktMachineTemplate)
 
 		if err != nil {
 			if apierrors.IsNotFound(err) {
-				logger.Error(err, "KTMachineTemplate not found no need to proceed for findind SubjectToken To Auth API", "Name", ownerMachineDeployment.Name, "Namespace", ownerMachineDeployment.Namespace)
+				logger.Error(err, "KTMachineTemplate not found no need to proceed for finding SubjectToken To Auth API", "Name", ownerMachineDeployment.Name, "Namespace", ownerMachineDeployment.Namespace)
 				return "", err
 			}
 			return "", err

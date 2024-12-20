@@ -4,6 +4,9 @@ metadata:
   labels:
     app.kubernetes.io/name: kt-cloud-operator
     app.kubernetes.io/managed-by: kustomize
-  name: ktsubjecttoken-sample
+  name: edge01
 spec:
-  # TODO(user): Add fields here
+  subjectToken: gAAAAABnZccpD_ZulBl0pVTsqLDq5Ukng4zJjzVxJs6cm9tQ7FtrcQEWaNOzdzXTif91K29ikLBDw3yUw9MU0nTLr3ZkZzbfHwMP5hgISgOMj4-FkViWCKEFMqoajD3NQXPAybT7izDAXfclQRibDVIHmdaGBnA5po9yD-c89sZiUR1RKobKTHE
+  token:
+    expiresAt: "2024-12-18T03:47:08.000000Z"
+

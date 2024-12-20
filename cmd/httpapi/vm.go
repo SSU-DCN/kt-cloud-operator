@@ -56,6 +56,12 @@ type RequestPayload struct {
 }
 
 func CreateVM(machine *v1beta1.KTMachine, token string) error {
+
+	fmt.Println("--------------------------------------------------------------------------")
+	fmt.Println("machine.Spec.Networks:", machine.Spec.Networks)
+	fmt.Println("___________________________________________________")
+	fmt.Println("machine.Spec.BlockDeviceMapping:", machine.Spec.BlockDeviceMapping)
+	fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 	// Create the payload
 	networks := []Network{}
 	block_device_mapping_v2 := []BlockDeviceMappingV2{}
@@ -100,8 +106,15 @@ func CreateVM(machine *v1beta1.KTMachine, token string) error {
 		return err
 	}
 
+	fmt.Println("************************************************************")
+	// Print the formatted payload
+	fmt.Println("Formatted Payload:")
+	fmt.Println(string(jsonData))
+
+	fmt.Println("#######################################################")
+
 	// Define the API URL
-	apiURL := Config.ApiBaseURL + Config.Zone + ""
+	apiURL := Config.ApiBaseURL + Config.Zone + "/server/servers"
 
 	// Set up the HTTP client
 	client := &http.Client{Timeout: 10 * time.Second}
