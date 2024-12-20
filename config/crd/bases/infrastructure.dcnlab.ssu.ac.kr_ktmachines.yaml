@@ -98,11 +98,29 @@ spec:
           status:
             description: KTMachineStatus defines the observed state of KTMachine.
             properties:
+              adminPass:
+                type: string
               id:
                 description: |-
                   INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
                   Important: Run "make" to regenerate code after modifying this file
                 type: string
+              links:
+                items:
+                  properties:
+                    href:
+                      type: string
+                    rel:
+                      type: string
+                  type: object
+                type: array
+              securityGroups:
+                items:
+                  properties:
+                    name:
+                      type: string
+                  type: object
+                type: array
             type: object
         type: object
     served: true

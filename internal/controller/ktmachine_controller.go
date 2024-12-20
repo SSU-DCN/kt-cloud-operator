@@ -19,11 +19,13 @@ package controller
 import (
 	"context"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 )
 
@@ -47,9 +49,18 @@ type KTMachineReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
 func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx, "LogFrom", "KTMachine")
+	logger.V(1).Info("KTMachine Reconcile", "KTMachine", req)
 
-	// TODO(user): your logic here
+	ktMachine := &v1beta1.KTMachine{}
+	if err := r.Get(ctx, req.NamespacedName, ktMachine); err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("KTMachine resource not found. Ignoring since it must be deleted")
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "Failed to get KTMachine resource")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }

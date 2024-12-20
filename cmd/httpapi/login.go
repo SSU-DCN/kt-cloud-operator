@@ -10,19 +10,13 @@ import (
 	"time"
 
 	// Meta API for object metadata
+	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 
 	v1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	"dcnlab.ssu.ac.kr/kt-cloud-operator/internal/cloudapi"
-	"github.com/kelseyhightower/envconfig"
 )
 
 type LoginResponse struct {
@@ -76,24 +70,31 @@ type Project struct {
 
 // end structs for login
 
+// var Config cloudapi.Config
+// var logger1 *zap.SugaredLogger
+
+// func ProcessEnvVariables() {
+// 	err := envconfig.Process("", &Config)
+// 	if err != nil {
+// 		panic(err.Error())
+// 	}
+// 	err, logger1 = logger(Config.LogLevel)
+// 	if err != nil {
+// 		panic(err.Error())
+// 	}
+
+// 	logger1.Info("Processed Env Variables...")
+// }
+
 var Config cloudapi.Config
 var logger1 *zap.SugaredLogger
 
-func ProcessEnvVariables() {
-	err := envconfig.Process("", &Config)
-	if err != nil {
-		panic(err.Error())
-	}
-	err, logger1 = logger(Config.LogLevel)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	logger1.Info("Processed Env Variables...")
+func init() {
+	Config, logger1 = ProcessEnvVariables()
 }
 
 func KTCloudLogin() {
-	ProcessEnvVariables()
+	// ProcessEnvVariables()
 
 	// Create an instance of the struct with your data
 	authRequest := AuthRequest{
@@ -116,6 +117,8 @@ func KTCloudLogin() {
 			},
 		},
 	}
+
+	fmt.Println(authRequest)
 
 	// Marshal the struct to JSON
 	payload, err := json.Marshal(authRequest)
@@ -304,36 +307,4 @@ func createTokenObject(k8sClient client.Client, subjectToken, responseBody strin
 		logger1.Info("KTSubjectToken object updated successfully!")
 	}
 
-}
-
-func logger(logLevel string) (error, *zap.SugaredLogger) {
-	var level zapcore.Level
-	err := level.UnmarshalText([]byte(logLevel))
-	if err != nil {
-		return err, nil
-	}
-	logConfig := zap.NewDevelopmentConfig()
-	logConfig.Level.SetLevel(level)
-	log, err := logConfig.Build()
-	if err != nil {
-		return err, nil
-	}
-	return nil, log.Sugar()
-}
-
-func getRestConfig(kubeconfigPath string) (*rest.Config, error) {
-	if kubeconfigPath != "" {
-		return clientcmd.BuildConfigFromFlags("", kubeconfigPath)
-	}
-	return ctrl.GetConfig()
-}
-
-// getClient initializes a controller-runtime Manager and returns the client it uses.
-func getClient(config *rest.Config, scheme *runtime.Scheme) (client.Client, error) {
-	// Register your custom resource's types
-	if err := v1beta1.AddToScheme(scheme); err != nil {
-		return nil, fmt.Errorf("failed to add custom resources to scheme: %v", err)
-	}
-
-	return client.New(config, client.Options{Scheme: scheme})
 }

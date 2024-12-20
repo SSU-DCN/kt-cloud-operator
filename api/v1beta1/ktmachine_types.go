@@ -41,7 +41,19 @@ type KTMachineSpec struct {
 type KTMachineStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	ID string `json:"id,omitempty"`
+	ID             string           `json:"id,omitempty"`
+	AdminPass      string           `json:"adminPass,omitempty"`
+	Links          []Links          `json:"links,omitempty"`
+	SecurityGroups []SecurityGroups `json:"securityGroups,omitempty"`
+}
+
+type Links struct {
+	Rel  string `json:"rel,omitempty"`
+	Href string `json:"href,omitempty"`
+}
+
+type SecurityGroups struct {
+	Name string `json:"name,omitempty"`
 }
 
 // +kubebuilder:object:root=true
