@@ -68,6 +68,12 @@ func (r *KTClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// Fetch child resources
+	_, err := r.fetchKTSubjectToken(ctx, ktcluster, req)
+	if err != nil {
+		logger.Error(err, "Failed to find KTSubjectToken")
+		return ctrl.Result{}, nil // Or return an error if this is critical
+	}
+
 	foundKTMachineTemplateCP, err := r.fetchMachineTemplate(ctx, ktcluster, "-control-plane", req)
 	if err != nil {
 		logger.Error(err, "Failed to find control-plane machine template")
@@ -100,9 +106,9 @@ func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluste
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Info("MachineTemplate not found for "+templateName, "Name", templateName, "Namespace", ktcluster.Namespace)
-			return nil, err
+			return &v1beta1.KTMachineTemplate{}, err
 		}
-		return nil, err
+		return &v1beta1.KTMachineTemplate{}, err
 	}
 
 	// Add owner references
@@ -111,6 +117,28 @@ func (r *KTClusterReconciler) fetchMachineTemplate(ctx context.Context, ktcluste
 	}
 
 	return machineTemplate, nil
+}
+
+func (r *KTClusterReconciler) fetchKTSubjectToken(ctx context.Context, ktcluster *v1beta1.KTCluster, req ctrl.Request) (*v1beta1.KTSubjectToken, error) {
+	logger := log.FromContext(ctx, "LogFrom", "KTCluster")
+
+	ktSubjectToken := &v1beta1.KTSubjectToken{}
+	err := r.Get(ctx, types.NamespacedName{Name: ktcluster.Name, Namespace: ktcluster.Namespace}, ktSubjectToken)
+
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Error(err, "KTSubjectToken not found no need to proceed for this", "Name", ktcluster.Name, "Namespace", ktcluster.Namespace)
+			return &v1beta1.KTSubjectToken{}, err
+		}
+		return &v1beta1.KTSubjectToken{}, err
+	}
+
+	// Add owner references
+	if err := r.ktClusterForKTSubjectTokenOnwer(ktcluster, ktSubjectToken, ctx, req); err != nil {
+		logger.Error(err, "Failed to add owner reference to KTSubject token")
+	}
+
+	return ktSubjectToken, nil
 }
 
 func (r *KTClusterReconciler) ktClusterForMachineTemplate(ktCluster *v1beta1.KTCluster, ktMachineTemplate *v1beta1.KTMachineTemplate, ctx context.Context, req ctrl.Request) error {
@@ -134,10 +162,32 @@ func (r *KTClusterReconciler) ktClusterForMachineTemplate(ktCluster *v1beta1.KTC
 	return nil
 }
 
+func (r *KTClusterReconciler) ktClusterForKTSubjectTokenOnwer(ktCluster *v1beta1.KTCluster, ktSubjectToken *v1beta1.KTSubjectToken, ctx context.Context, req ctrl.Request) error {
+	logger := log.FromContext(ctx, "LogFrom", "KTCluster")
+
+	logger.Info("adding owner ref for ktSubjectToken ", "KTSubjectToken.Namespace ", ktSubjectToken.Namespace, " KTSubjectToken.Name ", ktSubjectToken.Name)
+
+	// Set the ownerRef for the KTCluster
+	// will be deleted when the Cluster CR is deleted.
+	// controllerutil.SetControllerReference(ktCluster, ktMachineTemplate, r.Scheme)
+	if err := controllerutil.SetControllerReference(ktCluster, ktSubjectToken, r.Scheme); err != nil {
+		logger.Error(err, "Failed to set ktsubjecttoken owner reference")
+		return err
+	}
+
+	if err := r.Client.Update(ctx, ktSubjectToken); err != nil {
+		logger.Error(err, "Can't update for ktsubjecttoken owner reference")
+		return err
+	}
+
+	return nil
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *KTClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructurev1beta1.KTCluster{}).
+		Owns(&v1beta1.KTSubjectToken{}).
 		Owns(&v1beta1.KTMachineTemplate{}).
 		Named("ktcluster").
 		Complete(r)

@@ -37,10 +37,7 @@ import (
 
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	"dcnlab.ssu.ac.kr/kt-cloud-operator/internal/controller"
-
 	// +kubebuilder:scaffold:imports
-
-	httpapi "dcnlab.ssu.ac.kr/kt-cloud-operator/cmd/httpapi"
 )
 
 var (
@@ -121,8 +118,8 @@ func main() {
 		// this setup is not recommended for production.
 	}
 
-	// Make an auth API call
-	httpapi.KTCloudLogin()
+	// // Make an auth API call
+	// httpapi.KTCloudLogin()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,

@@ -32,9 +32,14 @@ type KTMachineSpec struct {
 	Flavor             string               `json:"flavor,omitempty"`
 	SSHKeyName         string               `json:"sshKeyName,omitempty"`
 	BlockDeviceMapping []BlockDeviceMapping `json:"blockDeviceMapping,omitempty"`
+	Networks           []Networks           `json:"networks,omitempty"`
 	Ports              []Port               `json:"ports,omitempty"`
 	AvailabilityZone   string               `json:"availabilityZone,omitempty"`
 	UserData           string               `json:"userData,omitempty"`
+}
+
+type Networks struct {
+	ID string `json:"id,omitempty"`
 }
 
 // KTMachineStatus defines the observed state of KTMachine.

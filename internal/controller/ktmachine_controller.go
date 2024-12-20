@@ -18,15 +18,18 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
+	"dcnlab.ssu.ac.kr/kt-cloud-operator/cmd/httpapi"
 )
 
 // KTMachineReconciler reconciles a KTMachine object
@@ -62,7 +65,101 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	//trigger to create machine on KTCloud by calling API
+	if ktMachine.Status.ID == "" {
+		logger.Info("Machine has no ID in the status field, create it")
+		//first get the token associated for the cluster and find token
+		subjectToken, err := r.getSubjectToken(ctx, ktMachine, req)
+		if err != nil {
+			logger.Error(err, "Failed to find KTSubject token matching cluster")
+			return ctrl.Result{RequeueAfter: time.Minute}, nil
+		}
+
+		err = httpapi.CreateVM(ktMachine, subjectToken)
+		if err != nil {
+			logger.Error(err, "Failed to create VM on KT Cloud during API Call")
+			return ctrl.Result{RequeueAfter: time.Minute}, nil
+		}
+
+		//use the response to from the api and update the machine
+
+	} else {
+		logger.Info("Machine already created and has ID")
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *KTMachineReconciler) getSubjectToken(ctx context.Context, ktMachine *infrastructurev1beta1.KTMachine, req ctrl.Request) (string, error) {
+
+	logger := log.FromContext(ctx, "LogFrom", "Machine")
+
+	ktMachineDeploymentList := &v1beta1.MachineDeploymentList{}
+	err := r.List(ctx, ktMachineDeploymentList, client.InNamespace(ktMachine.Namespace))
+	if err != nil {
+		logger.Error(err, "failed to list MachineDeployments for this machine")
+		return "", err
+	}
+
+	// Filter by ownerReferences
+	var ownerMachineDeployment v1beta1.MachineDeployment
+	for _, machineDeployment := range ktMachineDeploymentList.Items {
+		for _, ref := range ktMachine.OwnerReferences {
+			if ref.UID == machineDeployment.UID {
+				ownerMachineDeployment = machineDeployment
+				logger.Info("Found owned MachineDeployment", "name", machineDeployment.Name)
+				break
+			}
+		}
+	}
+
+	// we found matching machine deployment owner
+	// we have to find the cluster from this
+	// KTMachineTemplate is owned by KTCluster and KTMachineTemplate.Name = MachineDeployment.Name, KTMachineTemplate.NameSpace = MachineDeployment.NameSpace
+	// therefore, use MachineDeployment to MachineTemplate to find Cluster then token for the cluster
+	if ownerMachineDeployment.UID != "" {
+		ktMachineTemplate := &v1beta1.KTMachine{}
+		err := r.Get(ctx, types.NamespacedName{Name: ownerMachineDeployment.Name, Namespace: ownerMachineDeployment.Namespace}, ktMachineTemplate)
+
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				logger.Error(err, "KTMachineTemplate not found no need to proceed for findind SubjectToken To Auth API", "Name", ownerMachineDeployment.Name, "Namespace", ownerMachineDeployment.Namespace)
+				return "", err
+			}
+			return "", err
+		}
+
+		var clusterUID types.UID
+
+		for _, ref := range ktMachineTemplate.OwnerReferences {
+			if ref.Kind == "KTCluster" {
+				clusterUID = ref.UID
+				break
+
+			}
+		}
+
+		ktSubjectTokenList := &v1beta1.KTSubjectTokenList{}
+		if err := r.List(ctx, ktSubjectTokenList, client.InNamespace(ownerMachineDeployment.Namespace)); err != nil {
+			logger.Error(err, "Failed to list KTSubjectTokens")
+			return "", err
+		}
+
+		for _, token := range ktSubjectTokenList.Items {
+			for _, ref := range token.OwnerReferences {
+				if ref.Kind == "KTCluster" && ref.UID == clusterUID {
+					logger.Info("Found SubjectToken for KTCluster", "ClusterUID", clusterUID)
+					return token.Spec.SubjectToken, nil
+				}
+			}
+		}
+
+		logger.Info("No SubjectToken found for KTCluster", "ClusterUID", clusterUID)
+		return "", nil
+
+	}
+
+	return "", nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

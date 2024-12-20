@@ -118,8 +118,6 @@ func KTCloudLogin() {
 		},
 	}
 
-	fmt.Println(authRequest)
-
 	// Marshal the struct to JSON
 	payload, err := json.Marshal(authRequest)
 	if err != nil {
@@ -128,7 +126,7 @@ func KTCloudLogin() {
 	}
 
 	// Define the endpoint URL
-	apiURL := Config.ApiBaseURL + Config.Zone + "/identity/auth/tokens" // Replace with your API URL
+	apiURL := Config.ApiBaseURL + Config.Zone + "/identity/auth/tokens"
 
 	// Set up HTTP client with timeout
 	client := &http.Client{Timeout: 10 * time.Second}
