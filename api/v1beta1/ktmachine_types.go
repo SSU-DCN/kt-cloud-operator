@@ -29,13 +29,19 @@ type KTMachineSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of KTMachine. Edit ktmachine_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Flavor             string               `json:"flavor,omitempty"`
+	SSHKeyName         string               `json:"sshKeyName,omitempty"`
+	BlockDeviceMapping []BlockDeviceMapping `json:"blockDeviceMapping,omitempty"`
+	Ports              []Port               `json:"ports,omitempty"`
+	AvailabilityZone   string               `json:"availabilityZone,omitempty"`
+	UserData           string               `json:"userData,omitempty"`
 }
 
 // KTMachineStatus defines the observed state of KTMachine.
 type KTMachineStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	ID string `json:"id,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -60,5 +66,5 @@ type KTMachineList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&KTMachine{}, &KTMachineList{})
+	objectTypes = append(objectTypes, &KTMachine{}, &KTMachineList{})
 }

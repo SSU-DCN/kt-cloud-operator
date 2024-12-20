@@ -18,14 +18,22 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
 	infrastructurev1beta1 "dcnlab.ssu.ac.kr/kt-cloud-operator/api/v1beta1"
+	utils "dcnlab.ssu.ac.kr/kt-cloud-operator/internal/utils"
 )
 
 // MachineDeploymentReconciler reconciles a MachineDeployment object
@@ -60,13 +68,105 @@ func (r *MachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	logger := log.FromContext(ctx)
 	logger.V(1).Info("MachineDeployment Reconcile", "machineDeployment", req)
 
+	// Fetch the MachineDeployment instance
+	machineDeployment := &v1beta1.MachineDeployment{}
+	if err := r.Get(ctx, req.NamespacedName, machineDeployment); err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("MachineDeployment resource not found. Ignoring since it must be deleted")
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "Failed to get MachineDeployment resource")
+		return ctrl.Result{}, err
+	}
+
+	// create child resources and add owner references
+	countMachines, err := r.countChildMachinesByOwner(ctx, machineDeployment)
+	if err != nil {
+		logger.Error(err, "Failed to get Machines for deployment, maybe dont have")
+		return ctrl.Result{}, err
+	} else if countMachines != machineDeployment.Spec.Replicas {
+		logger.Info("KTMachines not found matching machine deployment replicas, we have to create a new one")
+		err := r.ktMachineForMachineDeployment(ctx, machineDeployment)
+		if err != nil {
+			logger.Error(err, "Failed to find KTMachineTemplate to create Machine from MachineDeployment", "MachineDeployment.Namespace", machineDeployment.Namespace, "MachineDeployment.Name", machineDeployment.Name)
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *MachineDeploymentReconciler) ktMachineForMachineDeployment(ctx context.Context, machineDeployment *v1beta1.MachineDeployment) error {
+	logger := log.FromContext(ctx)
+
+	foundKTMachineTemplate := &v1beta1.KTMachineTemplate{}
+	err := r.Get(ctx, types.NamespacedName{Name: machineDeployment.Name, Namespace: machineDeployment.Namespace}, foundKTMachineTemplate)
+	if err != nil {
+		logger.Error(err, "Failed to get KTMachineTemplate", "Name", machineDeployment.Name, "Namespace", machineDeployment.Namespace)
+		return err
+	}
+
+	for i := 0; i < machineDeployment.Spec.Replicas; i++ {
+		machineName := machineDeployment.Name + utils.RandomString(10)
+
+		machine := &v1beta1.KTMachine{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      machineName,
+				Namespace: machineDeployment.Namespace,
+			},
+			Spec: v1beta1.KTMachineSpec{
+				Flavor:             foundKTMachineTemplate.Spec.Template.Spec.Flavor,
+				SSHKeyName:         foundKTMachineTemplate.Spec.Template.Spec.SSHKeyName,
+				BlockDeviceMapping: foundKTMachineTemplate.Spec.Template.Spec.BlockDeviceMapping,
+			},
+		}
+
+		// Set the owner reference for the Machine
+		if err := controllerutil.SetControllerReference(machineDeployment, machine, r.Scheme); err != nil {
+			logger.Error(err, "Failed to set controller reference", "KTMachine.Name", machineName)
+			return err
+		}
+
+		logger.Info("Creating a new KTMachine", "KTMachine.Namespace", machine.Namespace, "KTMachine.Name", machine.Name)
+		if err := r.Create(ctx, machine); err != nil {
+			logger.Error(err, "Failed to create new KTMachine", "KTMachine.Namespace", machine.Namespace, "KTMachine.Name", machine.Name)
+			return err
+		}
+	}
+
+	// Ensure all machines are created before returning
+	logger.Info("Successfully created all KTMachine replicas", "Replicas", machineDeployment.Spec.Replicas)
+	return nil
+
+}
+
+func (r *MachineDeploymentReconciler) countChildMachinesByOwner(ctx context.Context, machineDeployment *v1beta1.MachineDeployment) (int, error) {
+	ktMachineList := &v1beta1.KTMachineList{}
+	err := r.List(ctx, ktMachineList, client.InNamespace(machineDeployment.Namespace))
+	if err != nil {
+		return 0, fmt.Errorf("failed to list KTMachines: %w", err)
+	}
+
+	// Filter by ownerReferences
+	count := 0
+	for _, machine := range ktMachineList.Items {
+		for _, ownerRef := range machine.OwnerReferences {
+			if ownerRef.Kind == "MachineDeployment" && ownerRef.Name == machineDeployment.Name {
+				count++
+				break
+			}
+		}
+	}
+	return count, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *MachineDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructurev1beta1.MachineDeployment{}).
+		Owns(&infrastructurev1beta1.KTMachine{}).
 		Named("machinedeployment").
 		Complete(r)
 }

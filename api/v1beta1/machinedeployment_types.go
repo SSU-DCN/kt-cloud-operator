@@ -29,10 +29,10 @@ type MachineDeploymentSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of MachineDeployment. Edit machinedeployment_types.go to remove/update
-	ClusterName string      `json:"clusterName"`
-	Replicas    int         `json:"replicas"`
-	Selector    Selector    `json:"selector,omitempty"`
-	Template    MachineSpec `json:"template,omitempty"`
+	// ClusterName string      `json:"clusterName"`
+	Replicas int         `json:"replicas"`
+	Selector Selector    `json:"selector,omitempty"`
+	Template MachineSpec `json:"template,omitempty"`
 }
 
 // Selector defines the labels used for matching machines
