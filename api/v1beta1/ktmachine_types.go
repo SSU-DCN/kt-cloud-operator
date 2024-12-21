@@ -49,6 +49,7 @@ type KTMachineStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	ID             string           `json:"id,omitempty"`
 	AdminPass      string           `json:"adminPass,omitempty"`
+	State          string           `json:"state,omitempty"`
 	Links          []Links          `json:"links,omitempty"`
 	SecurityGroups []SecurityGroups `json:"securityGroups,omitempty"`
 }

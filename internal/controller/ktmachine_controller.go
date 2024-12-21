@@ -75,6 +75,11 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{RequeueAfter: time.Minute}, nil
 		}
 
+		if subjectToken == "" {
+			logger.Error(err, "We have to reconcile again to check the Subject token")
+			return ctrl.Result{RequeueAfter: time.Minute}, nil
+		}
+
 		err = httpapi.CreateVM(ktMachine, subjectToken)
 		if err != nil {
 			logger.Error(err, "Failed to create VM on KT Cloud during API Call")
