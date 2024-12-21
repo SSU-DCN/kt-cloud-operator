@@ -15,4 +15,6 @@ spec:
           sourceType: image
           volumeSize: 50
           destinationType: volume
+      networkTier:
+        - id: 7031a1e3-7435-4cd2-9087-671a995f3bbd
       sshKeyName: test1

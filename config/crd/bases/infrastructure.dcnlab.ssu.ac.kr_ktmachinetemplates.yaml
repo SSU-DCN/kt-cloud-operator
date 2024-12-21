@@ -63,6 +63,13 @@ spec:
                         type: array
                       flavor:
                         type: string
+                      networkTier:
+                        items:
+                          properties:
+                            id:
+                              type: string
+                          type: object
+                        type: array
                       ports:
                         items:
                           description: Port defines a network configuration or IP

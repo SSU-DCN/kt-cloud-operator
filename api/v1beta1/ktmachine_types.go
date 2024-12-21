@@ -32,6 +32,7 @@ type KTMachineSpec struct {
 	Flavor             string               `json:"flavor,omitempty"`
 	SSHKeyName         string               `json:"sshKeyName,omitempty"`
 	BlockDeviceMapping []BlockDeviceMapping `json:"blockDeviceMapping,omitempty"`
+	NetworkTier        []NetworkTier        `json:"networkTier,omitempty"`
 	Networks           []Networks           `json:"networks,omitempty"`
 	Ports              []Port               `json:"ports,omitempty"`
 	AvailabilityZone   string               `json:"availabilityZone,omitempty"`

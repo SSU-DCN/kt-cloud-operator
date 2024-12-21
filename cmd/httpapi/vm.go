@@ -34,6 +34,10 @@ type Network struct {
 	UUID string `json:"uuid"`
 }
 
+type NetworkTier struct {
+	UUID string `json:"uuid"`
+}
+
 type BlockDeviceMappingV2 struct {
 	DestinationType string `json:"destination_type"`
 	BootIndex       int    `json:"boot_index"`
@@ -47,7 +51,7 @@ type Server struct {
 	KeyName              string                 `json:"key_name"`
 	FlavorRef            string                 `json:"flavorRef"`
 	AvailabilityZone     string                 `json:"availability_zone"`
-	Networks             []Network              `json:"networks"`
+	Networks             []NetworkTier          `json:"networks"`
 	BlockDeviceMappingV2 []BlockDeviceMappingV2 `json:"block_device_mapping_v2"`
 }
 
@@ -63,14 +67,14 @@ func CreateVM(machine *v1beta1.KTMachine, token string) error {
 	fmt.Println("machine.Spec.BlockDeviceMapping:", machine.Spec.BlockDeviceMapping)
 	fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 	// Create the payload
-	networks := []Network{}
+	networks := []NetworkTier{}
 	block_device_mapping_v2 := []BlockDeviceMappingV2{}
 
-	for i, network := range machine.Spec.Networks {
+	for i, network := range machine.Spec.NetworkTier {
 		fmt.Println(network.ID, i)
 		networks = append(
 			networks,
-			Network{
+			NetworkTier{
 				UUID: network.ID,
 			})
 	}

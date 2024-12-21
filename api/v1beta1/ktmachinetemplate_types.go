@@ -43,6 +43,7 @@ type Spec struct {
 	Flavor             string               `json:"flavor,omitempty"`
 	SSHKeyName         string               `json:"sshKeyName,omitempty"`
 	BlockDeviceMapping []BlockDeviceMapping `json:"blockDeviceMapping,omitempty"`
+	NetworkTier        []NetworkTier        `json:"networkTier,omitempty"`
 	Ports              []Port               `json:"ports,omitempty"`
 }
 
@@ -52,6 +53,10 @@ type BlockDeviceMapping struct {
 	SourceType      string `json:"sourceType,omitempty"`
 	VolumeSize      int    `json:"volumeSize,omitempty"`
 	ID              string `json:"id,omitempty"`
+}
+
+type NetworkTier struct {
+	ID string `json:"id,omitempty"`
 }
 
 // Port defines a network configuration or IP details

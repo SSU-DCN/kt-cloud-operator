@@ -118,7 +118,7 @@ func (r *MachineDeploymentReconciler) ktMachineForMachineDeployment(ctx context.
 	}
 
 	for i := 0; i < machinesToCreate; i++ {
-		machineName := machineDeployment.Name + strings.ToLower(utils.RandomString(10))
+		machineName := machineDeployment.Name + "-" + strings.ToLower(utils.RandomString(10))
 
 		machine := &v1beta1.KTMachine{
 			ObjectMeta: metav1.ObjectMeta{
@@ -127,8 +127,10 @@ func (r *MachineDeploymentReconciler) ktMachineForMachineDeployment(ctx context.
 			},
 			Spec: v1beta1.KTMachineSpec{
 				Flavor:             foundKTMachineTemplate.Spec.Template.Spec.Flavor,
+				AvailabilityZone:   machineDeployment.Spec.Template.Spec.FailureDomain,
 				SSHKeyName:         foundKTMachineTemplate.Spec.Template.Spec.SSHKeyName,
 				BlockDeviceMapping: foundKTMachineTemplate.Spec.Template.Spec.BlockDeviceMapping,
+				NetworkTier:        foundKTMachineTemplate.Spec.Template.Spec.NetworkTier,
 			},
 		}
 

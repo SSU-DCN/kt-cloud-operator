@@ -82,7 +82,7 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 
 		//use the response to from the api and update the machine
-
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	} else {
 		logger.Info("Machine already created and has ID")
 	}
