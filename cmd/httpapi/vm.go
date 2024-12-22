@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -191,7 +192,7 @@ func CreateVM(machine *v1beta1.KTMachine, token string) error {
 		// 	AdminPass: serverResponse.Server.AdminPass,
 		// 	Links: serverResponse.Server.Links,
 		// }
-		err = updateVMStatus(k8sClient, machine, &serverResponse.Server)
+		err = updateVMStatus(k8sClient, machine, &serverResponse.Server, "Creating")
 		if err != nil {
 			logger1.Errorf("Failed to update VMstatus: %v", err)
 			return err
@@ -205,15 +206,74 @@ func CreateVM(machine *v1beta1.KTMachine, token string) error {
 
 	return nil
 }
-func updateVMStatus(k8sClient client.Client, machine *v1beta1.KTMachine, newMachineStatus *v1beta1.KTMachineStatus) error {
+func updateVMStatus(k8sClient client.Client, machine *v1beta1.KTMachine, newMachineStatus *v1beta1.KTMachineStatus, state string) error {
 	ctx := context.Background()
 
 	machine.Status = *newMachineStatus
-	machine.Status.State = "Creating"
+	machine.Status.Status = state
 	err := k8sClient.Status().Update(ctx, machine)
 	if err != nil {
 		logger1.Errorf("Failed to update KTSubjectToken object: %v", err)
 		return err
 	}
 	return nil
+}
+
+// get the machine
+func GetCreatedVM(machine *v1beta1.KTMachine, token string) (*v1beta1.KTMachineStatus, error) {
+
+	// Define the API URL
+	apiURL := Config.ApiBaseURL + Config.Zone + "/server/servers/" + machine.Status.ID
+
+	// Set up the HTTP client
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Create a new HTTP GET request
+	req, err := http.NewRequest("GET", apiURL, bytes.NewBuffer([]byte{}))
+	if err != nil {
+		logger1.Error("Error creating GET VM request:", err)
+		return nil, err
+	}
+
+	// Add headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Auth-Token", token) // Replace with your actual token
+
+	// Send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		logger1.Error("Error sending request:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Handle the response
+	fmt.Println("Response Status:", resp.Status)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger1.Error("Error reading response body:", err)
+		return nil, err
+	}
+
+	logger1.Info("-----------------------------------------")
+	logger1.Info("Response Body:", string(body))
+	logger1.Info("********************************")
+
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		logger1.Info("GET request successful and got machine!")
+		// Parse the JSON into the struct
+		var serverResponse ServerResponse
+		err = json.Unmarshal(body, &serverResponse)
+		if err != nil {
+			logger1.Error("Error unmarshaling JSON response:", err)
+			return nil, err
+		}
+		logger1.Error("Error unmarshaling JSON response:", err)
+		return &serverResponse.Server, nil
+
+	} else {
+		logger1.Error("GET request failed with status:", resp.Status)
+		return nil, errors.New("GET request failed with status: " + resp.Status)
+	}
+
 }

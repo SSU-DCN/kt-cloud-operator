@@ -49,11 +49,41 @@ type KTMachineStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	ID             string           `json:"id,omitempty"`
 	AdminPass      string           `json:"adminPass,omitempty"`
-	State          string           `json:"state,omitempty"`
 	Links          []Links          `json:"links,omitempty"`
 	SecurityGroups []SecurityGroups `json:"securityGroups,omitempty"`
+
+	// New fields
+	TenantID string `json:"tenant_id,omitempty"`
+	// Metadata          map[string]interface{} `json:"metadata,omitempty"`
+	Addresses         map[string][]Address `json:"addresses,omitempty"`
+	TaskState         *string              `json:"OS-EXT-STS:task_state,omitempty"`
+	Description       *string              `json:"description,omitempty"`
+	DiskConfig        string               `json:"OS-DCF:diskConfig,omitempty"`
+	TrustedImageCerts *string              `json:"trusted_image_certificates,omitempty"`
+	AvailabilityZone  string               `json:"OS-EXT-AZ:availability_zone,omitempty"`
+	PowerState        int                  `json:"OS-EXT-STS:power_state,omitempty"`
+	VolumesAttached   []VolumeAttached     `json:"os-extended-volumes:volumes_attached,omitempty"`
+	Locked            bool                 `json:"locked,omitempty"`
+	Image             string               `json:"image,omitempty"`
+	AccessIPv4        string               `json:"accessIPv4,omitempty"`
+	AccessIPv6        string               `json:"accessIPv6,omitempty"`
+	Created           string               `json:"created,omitempty"`
+	HostID            string               `json:"hostId,omitempty"`
+	Tags              []string             `json:"tags,omitempty"`
+	Flavor            Flavor               `json:"flavor,omitempty"`
+	KeyName           string               `json:"key_name,omitempty"`
+	VMState           string               `json:"OS-EXT-STS:vm_state,omitempty"`
+	UserID            string               `json:"user_id,omitempty"`
+	Name              string               `json:"name,omitempty"`
+	Progress          int                  `json:"progress,omitempty"`
+	LaunchedAt        string               `json:"OS-SRV-USG:launched_at,omitempty"`
+	Updated           string               `json:"updated,omitempty"`
+	Status            string               `json:"status,omitempty"`
+	TerminatedAt      *string              `json:"OS-SRV-USG:terminated_at,omitempty"`
+	ConfigDrive       string               `json:"config_drive,omitempty"`
 }
 
+// Supporting structs
 type Links struct {
 	Rel  string `json:"rel,omitempty"`
 	Href string `json:"href,omitempty"`
@@ -61,6 +91,28 @@ type Links struct {
 
 type SecurityGroups struct {
 	Name string `json:"name,omitempty"`
+}
+
+type Address struct {
+	MACAddr string `json:"OS-EXT-IPS-MAC:mac_addr,omitempty"`
+	Type    string `json:"OS-EXT-IPS:type,omitempty"`
+	Addr    string `json:"addr,omitempty"`
+	Version int    `json:"version,omitempty"`
+}
+
+type VolumeAttached struct {
+	DeleteOnTermination bool   `json:"delete_on_termination,omitempty"`
+	ID                  string `json:"id,omitempty"`
+}
+
+type Flavor struct {
+	Disk       int               `json:"disk,omitempty"`
+	Swap       int               `json:"swap,omitempty"`
+	Original   string            `json:"original_name,omitempty"`
+	ExtraSpecs map[string]string `json:"extra_specs,omitempty"`
+	Ephemeral  int               `json:"ephemeral,omitempty"`
+	VCPUs      int               `json:"vcpus,omitempty"`
+	RAM        int               `json:"ram,omitempty"`
 }
 
 // +kubebuilder:object:root=true

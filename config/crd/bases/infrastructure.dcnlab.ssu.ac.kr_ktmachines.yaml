@@ -112,15 +112,81 @@ spec:
           status:
             description: KTMachineStatus defines the observed state of KTMachine.
             properties:
+              OS-DCF:diskConfig:
+                type: string
+              OS-EXT-AZ:availability_zone:
+                type: string
+              OS-EXT-STS:power_state:
+                type: integer
+              OS-EXT-STS:task_state:
+                type: string
+              OS-EXT-STS:vm_state:
+                type: string
+              OS-SRV-USG:launched_at:
+                type: string
+              OS-SRV-USG:terminated_at:
+                type: string
+              accessIPv4:
+                type: string
+              accessIPv6:
+                type: string
+              addresses:
+                additionalProperties:
+                  items:
+                    properties:
+                      OS-EXT-IPS-MAC:mac_addr:
+                        type: string
+                      OS-EXT-IPS:type:
+                        type: string
+                      addr:
+                        type: string
+                      version:
+                        type: integer
+                    type: object
+                  type: array
+                description: Metadata          map[string]interface{} `json:"metadata,omitempty"`
+                type: object
               adminPass:
+                type: string
+              config_drive:
+                type: string
+              created:
+                type: string
+              description:
+                type: string
+              flavor:
+                properties:
+                  disk:
+                    type: integer
+                  ephemeral:
+                    type: integer
+                  extra_specs:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  original_name:
+                    type: string
+                  ram:
+                    type: integer
+                  swap:
+                    type: integer
+                  vcpus:
+                    type: integer
+                type: object
+              hostId:
                 type: string
               id:
                 description: |-
                   INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
                   Important: Run "make" to regenerate code after modifying this file
                 type: string
+              image:
+                type: string
+              key_name:
+                type: string
               links:
                 items:
+                  description: Supporting structs
                   properties:
                     href:
                       type: string
@@ -128,6 +194,21 @@ spec:
                       type: string
                   type: object
                 type: array
+              locked:
+                type: boolean
+              name:
+                type: string
+              os-extended-volumes:volumes_attached:
+                items:
+                  properties:
+                    delete_on_termination:
+                      type: boolean
+                    id:
+                      type: string
+                  type: object
+                type: array
+              progress:
+                type: integer
               securityGroups:
                 items:
                   properties:
@@ -135,7 +216,20 @@ spec:
                       type: string
                   type: object
                 type: array
-              state:
+              status:
+                type: string
+              tags:
+                items:
+                  type: string
+                type: array
+              tenant_id:
+                description: New fields
+                type: string
+              trusted_image_certificates:
+                type: string
+              updated:
+                type: string
+              user_id:
                 type: string
             type: object
         type: object

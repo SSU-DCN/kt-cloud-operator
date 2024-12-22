@@ -65,20 +65,21 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	//first get the token associated for the cluster and find token
+	subjectToken, err := r.getSubjectToken(ctx, ktMachine, req)
+	if err != nil {
+		logger.Error(err, "Failed to find KTSubject token matching cluster")
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	}
+
+	if subjectToken == "" {
+		logger.Error(err, "We have to reconcile again to check the Subject token")
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	}
+
 	//trigger to create machine on KTCloud by calling API
 	if ktMachine.Status.ID == "" {
-		logger.Info("Machine has no ID in the status field, create it")
-		//first get the token associated for the cluster and find token
-		subjectToken, err := r.getSubjectToken(ctx, ktMachine, req)
-		if err != nil {
-			logger.Error(err, "Failed to find KTSubject token matching cluster")
-			return ctrl.Result{RequeueAfter: time.Minute}, nil
-		}
-
-		if subjectToken == "" {
-			logger.Error(err, "We have to reconcile again to check the Subject token")
-			return ctrl.Result{RequeueAfter: time.Minute}, nil
-		}
+		logger.Info("Machine has no ID in the status field, create it on KT Cloud")
 
 		err = httpapi.CreateVM(ktMachine, subjectToken)
 		if err != nil {
@@ -90,6 +91,29 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	} else {
 		logger.Info("Machine already created and has ID")
+		//call API and check if machine is ready
+		// if ktMachine.Status.Status == "Creating" {
+		// if ktMachine.Status.Status == "Creating" {
+		serverResponse, err := httpapi.GetCreatedVM(ktMachine, subjectToken)
+		if err != nil {
+			logger.Error(err, "Failed to query VM on KT Cloud during API Call")
+			return ctrl.Result{RequeueAfter: time.Minute}, nil
+		}
+
+		logger.Info("Got the machine we have to update if the states dont match")
+		if ktMachine.Status.Status != serverResponse.Status {
+			ktMachine.Status = *serverResponse
+			if err := r.Status().Update(ctx, ktMachine); err != nil {
+				logger.Error(err, "Can't update for machine with status on cloud")
+				return ctrl.Result{RequeueAfter: time.Minute}, nil
+			}
+
+		}
+
+		logger.Info("Machine state is not creating")
+		logger.Info("The status is the same on cloud and cluster")
+		// logger.Info("Do we need to reconcile again when the machine is all ready?")
+
 	}
 
 	return ctrl.Result{}, nil
