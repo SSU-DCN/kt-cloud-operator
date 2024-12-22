@@ -113,6 +113,7 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		logger.Info("Machine state is not creating")
 		logger.Info("The status is the same on cloud and cluster")
 		// logger.Info("Do we need to reconcile again when the machine is all ready?")
+		//what happens if 404 on cloud but present on cluster?
 
 	}
 
