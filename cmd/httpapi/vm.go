@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -57,6 +58,7 @@ type Server struct {
 	AvailabilityZone     string                 `json:"availability_zone"`
 	Networks             []NetworkTier          `json:"networks"`
 	BlockDeviceMappingV2 []BlockDeviceMappingV2 `json:"block_device_mapping_v2"`
+	UserData             string                 `json:"user_data"`
 }
 
 type RequestPayload struct {
@@ -95,6 +97,42 @@ func CreateVM(machine *v1beta1.KTMachine, token string) error {
 			})
 	}
 
+	// Cloud-init configuration
+	cloudInit := `#cloud-config
+runcmd:
+  - export K8S_API=$(hostname -I | awk '{print $1}')  # Replace with your actual K8s API server address
+  - export INTERNALIP=$(hostname -I | awk '{print $1}')
+  - sudo swapoff -a
+  - sudo sed -i '/\bswap\b/d' /etc/fstab
+  - sudo swapoff /swap.img
+  - sudo kubeadm init --control-plane-endpoint="${INTERNALIP}:6443" || echo "kubeadm init failed"
+  - if [ -f /etc/kubernetes/admin.conf ]; then
+      mkdir -p /home/ubuntu/.kube;
+      cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config;
+      chown $(id -u ubuntu):$(id -g ubuntu) /home/ubuntu/.kube/config;
+    else
+      echo "admin.conf not found. kubeadm init may have failed.";
+      exit;
+    fi
+  - mkdir -p /tmp/metadata
+  - cd /tmp/metadata
+  - CAHASH=$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')
+  - TOKEN=$(kubeadm token list | awk '/authentication/{print $1}')
+  - cp /etc/kubernetes/admin.conf admin.conf
+  - cp /etc/kubernetes/pki/etcd/ca.crt etcd-ca.crt
+  - cp /etc/kubernetes/pki/etcd/ca.key etcd-ca.key
+  - cp /etc/kubernetes/pki/ca.crt ca.crt
+  - cp /etc/kubernetes/pki/ca.key ca.key
+  - cp /etc/kubernetes/pki/front-proxy-ca.crt front-proxy-ca.crt
+  - cp /etc/kubernetes/pki/front-proxy-ca.key front-proxy-ca.key
+  - cp /etc/kubernetes/pki/sa.key sa.key
+  - cp /etc/kubernetes/pki/sa.pub sa.pub
+  - echo "${K8S_API} ${CAHASH} ${TOKEN}" > k8s
+  - python3 -m http.server`
+
+	// Encode the cloud-init configuration in Base64
+	encoded_user_data := base64.StdEncoding.EncodeToString([]byte(cloudInit))
+
 	payload := RequestPayload{
 		Server: Server{
 			Name:                 machine.Name,
@@ -103,6 +141,7 @@ func CreateVM(machine *v1beta1.KTMachine, token string) error {
 			AvailabilityZone:     machine.Spec.AvailabilityZone,
 			Networks:             networks,
 			BlockDeviceMappingV2: block_device_mapping_v2,
+			UserData:             encoded_user_data,
 		},
 	}
 

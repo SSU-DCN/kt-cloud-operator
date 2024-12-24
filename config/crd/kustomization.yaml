@@ -10,6 +10,7 @@ resources:
 - bases/infrastructure.dcnlab.ssu.ac.kr_machinedeployments.yaml
 - bases/infrastructure.dcnlab.ssu.ac.kr_ktsubjecttokens.yaml
 - bases/infrastructure.dcnlab.ssu.ac.kr_ktmachines.yaml
+- bases/infrastructure.dcnlab.ssu.ac.kr_ktpublicnetworks.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

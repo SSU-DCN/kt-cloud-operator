@@ -32,7 +32,15 @@ type KTSubjectTokenSpec struct {
 	SubjectToken string `json:"subjectToken,omitempty"`
 	Token        Token  `json:"token,omitempty"`
 	// Date         string `json:"date,omitempty"`
+	ClusterRef ClusterRef `json:"clusterRef,omitempty"`
 }
+
+type ClusterRef struct {
+	ApiVersion string `json:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty"`
+	Name       string `json:"name,omitempty"`
+}
+
 type Token struct {
 	ExpiresAt string `json:"expiresAt,omitempty"`
 	IsDomain  bool   `json:"isDomain,omitempty"`

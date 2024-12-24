@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -87,6 +88,19 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{RequeueAfter: time.Minute}, nil
 		}
 
+		//we have to attach public IP to all control planes
+		// check if current machine is control plane
+		machineName := ktMachine.Name
+		substring := "control-plane"
+
+		if strings.Contains(machineName, substring) {
+			logger.Info("The machine name contains 'control-plane', therefore Control Plane.")
+			//attach public IP
+			// httpapi.AttachPublicIP()
+		} else {
+			logger.Info("This is a worker machine")
+		}
+
 		//use the response to from the api and update the machine
 		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	} else {
@@ -95,7 +109,7 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// if ktMachine.Status.Status == "Creating" {
 		// if ktMachine.Status.Status == "Creating" {
 		serverResponse, err := httpapi.GetCreatedVM(ktMachine, subjectToken)
-		if err != nil {
+		if err != nil && serverResponse != nil {
 			logger.Error(err, "Failed to query VM on KT Cloud during API Call")
 			return ctrl.Result{RequeueAfter: time.Minute}, nil
 		}
@@ -115,9 +129,13 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// logger.Info("Do we need to reconcile again when the machine is all ready?")
 		//what happens if 404 on cloud but present on cluster?
 
+		//check if machine is control plane and get kubeadm data
+		//if we already kubeadm data, join worker nodes if not joined
+
+		return ctrl.Result{RequeueAfter: time.Hour / 2}, nil
 	}
 
-	return ctrl.Result{}, nil
+	// return ctrl.Result{RequeueAfter: time.Hour}, nil
 }
 
 func (r *KTMachineReconciler) getSubjectToken(ctx context.Context, ktMachine *infrastructurev1beta1.KTMachine, req ctrl.Request) (string, error) {
