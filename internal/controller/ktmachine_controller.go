@@ -143,7 +143,7 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			if cluster.Spec.ControlPlaneExternalNetworkEnable && len(ktMachine.Status.AssignedPublicIps) == 0 {
 				err = httpapi.AttachPublicIP(ktMachine, subjectToken)
 				if err != nil {
-					logger.Error(err, "Failed to attach network to machine Machine")
+					logger.Error(err, "Failed to attach network to Machine")
 					return ctrl.Result{RequeueAfter: time.Minute}, nil
 				}
 				//we have to fix firewall settings

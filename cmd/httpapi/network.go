@@ -152,26 +152,30 @@ func AttachPublicIP(machine *v1beta1.KTMachine, token string) error {
 	logger1.Info("Response Body:", string(body))
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		logger1.Info("POST request successful and created machine!")
+		logger1.Info("POST request successful and attached Ip Address to machine!")
 
 		// Parse the JSON into the struct
-		var serverResponse NcEnableStaticNatResponse
+		var serverResponse NATAttachResponse
 		err = json.Unmarshal(body, &serverResponse)
 		if err != nil {
 			logger1.Error("Error unmarshaling JSON response:", err)
 			return err
 		}
 
-		if !serverResponse.Success {
-			return errors.New(serverResponse.DisplayText)
+		// logger1.Info("Response Text: " + serverResponse.NcEnableStaticNatResponse.DisplayText)
+
+		if !serverResponse.NcEnableStaticNatResponse.Success {
+			return errors.New(serverResponse.NcEnableStaticNatResponse.DisplayText)
 		}
+
+		// logger1.Info("Didnt pass here")
 
 		// Update the machine
 		// Update the machine K8s Resource
 		clientConfig, err := getRestConfig(Config.Kubeconfig)
 		if err != nil {
 			logger1.Errorf("Cannot prepare k8s client config: %v. Kubeconfig was: %s", err, Config.Kubeconfig)
-			panic(err.Error())
+			return err
 		}
 		// Set up a scheme (use runtime.Scheme from apimachinery)
 		scheme := runtime.NewScheme()

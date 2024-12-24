@@ -294,9 +294,9 @@ func GetCreatedVM(machine *v1beta1.KTMachine, token string) (*v1beta1.KTMachineS
 		return nil, err
 	}
 
-	logger1.Info("-----------------------------------------")
-	logger1.Info("Response Body:", string(body))
-	logger1.Info("********************************")
+	// logger1.Info("-----------------------------------------")
+	// logger1.Info("Response Body:", string(body))
+	// logger1.Info("********************************")
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		logger1.Info("GET request successful and got machine!")
@@ -307,7 +307,7 @@ func GetCreatedVM(machine *v1beta1.KTMachine, token string) (*v1beta1.KTMachineS
 			logger1.Error("Error unmarshaling JSON response:", err)
 			return nil, err
 		}
-		logger1.Error("Error unmarshaling JSON response:", err)
+		// logger1.Error("Error unmarshaling JSON response:", err)
 		return &serverResponse.Server, nil
 
 	} else {
