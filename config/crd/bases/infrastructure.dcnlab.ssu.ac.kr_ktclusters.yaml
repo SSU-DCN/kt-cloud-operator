@@ -48,14 +48,8 @@ spec:
                 required:
                 - enabled
                 type: object
-              externalNetwork:
-                description: ExternalNetwork represents the external network configuration
-                properties:
-                  id:
-                    type: string
-                required:
-                - id
-                type: object
+              controlPlaneExternalNetworkEnable:
+                type: boolean
               identityRef:
                 description: IdentityRef holds the identity reference for OpenStack
                 properties:

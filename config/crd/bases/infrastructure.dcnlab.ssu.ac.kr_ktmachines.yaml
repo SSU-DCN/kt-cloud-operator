@@ -112,6 +112,15 @@ spec:
           status:
             description: KTMachineStatus defines the observed state of KTMachine.
             properties:
+              AssignedPublicIPs:
+                items:
+                  properties:
+                    id:
+                      type: string
+                    ip:
+                      type: string
+                  type: object
+                type: array
               OS-DCF:diskConfig:
                 type: string
               OS-EXT-AZ:availability_zone:

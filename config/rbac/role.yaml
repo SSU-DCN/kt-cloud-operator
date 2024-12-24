@@ -11,6 +11,8 @@ rules:
   - ktclusters
   - ktmachines
   - ktmachinetemplates
+  - ktnetworkfirewalls
+  - ktpublicnetworks
   - ktsubjecttokens
   - kubeadmconfigtemplates
   - kubeadmcontrolplanes
@@ -30,6 +32,8 @@ rules:
   - ktclusters/finalizers
   - ktmachines/finalizers
   - ktmachinetemplates/finalizers
+  - ktnetworkfirewalls/finalizers
+  - ktpublicnetworks/finalizers
   - ktsubjecttokens/finalizers
   - kubeadmconfigtemplates/finalizers
   - kubeadmcontrolplanes/finalizers
@@ -43,6 +47,8 @@ rules:
   - ktclusters/status
   - ktmachines/status
   - ktmachinetemplates/status
+  - ktnetworkfirewalls/status
+  - ktpublicnetworks/status
   - ktsubjecttokens/status
   - kubeadmconfigtemplates/status
   - kubeadmcontrolplanes/status

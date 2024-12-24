@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"errors"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -88,19 +90,6 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{RequeueAfter: time.Minute}, nil
 		}
 
-		//we have to attach public IP to all control planes
-		// check if current machine is control plane
-		machineName := ktMachine.Name
-		substring := "control-plane"
-
-		if strings.Contains(machineName, substring) {
-			logger.Info("The machine name contains 'control-plane', therefore Control Plane.")
-			//attach public IP
-			// httpapi.AttachPublicIP()
-		} else {
-			logger.Info("This is a worker machine")
-		}
-
 		//use the response to from the api and update the machine
 		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	} else {
@@ -132,6 +121,39 @@ func (r *KTMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		//check if machine is control plane and get kubeadm data
 		//if we already kubeadm data, join worker nodes if not joined
 
+		//we have to attach public IP to all control planes
+		// check if current machine is control plane
+		machineName := ktMachine.Name
+		substring := "control-plane"
+
+		if strings.Contains(machineName, substring) {
+			logger.Info("The machine name contains 'control-plane', therefore Control Plane.")
+			//attach public IP
+			cluster, err := r.GetMachineAssociatedCluster(ctx, ktMachine, req)
+			if cluster == nil || err != nil {
+				if cluster == nil {
+					logger.Error(errors.New("cluster empty from get-associated-cluster for machine"), "Failed to retrieve cluster for Machine")
+					return ctrl.Result{RequeueAfter: time.Minute}, nil
+				} else if err != nil {
+					logger.Error(err, "Failed to retrieve cluster for Machine")
+					return ctrl.Result{RequeueAfter: time.Minute}, nil
+				}
+			}
+
+			if cluster.Spec.ControlPlaneExternalNetworkEnable && len(ktMachine.Status.AssignedPublicIps) == 0 {
+				err = httpapi.AttachPublicIP(ktMachine, subjectToken)
+				if err != nil {
+					logger.Error(err, "Failed to attach network to machine Machine")
+					return ctrl.Result{RequeueAfter: time.Minute}, nil
+				}
+				//we have to fix firewall settings
+			}
+			logger.Info("Skip adding public IP address to Machine already added")
+
+		} else {
+			logger.Info("This is a worker machine")
+		}
+
 		return ctrl.Result{RequeueAfter: time.Hour / 2}, nil
 	}
 
@@ -142,11 +164,40 @@ func (r *KTMachineReconciler) getSubjectToken(ctx context.Context, ktMachine *in
 
 	logger := log.FromContext(ctx, "LogFrom", "Machine")
 
+	cluster, err := r.GetMachineAssociatedCluster(ctx, ktMachine, req)
+	if cluster == nil || err != nil {
+		if cluster == nil {
+			return "", errors.New("Failed to retrieve cluster for Machine")
+		} else if err != nil {
+			return "", err
+		}
+	}
+
+	//ktsubjecttoken.name is always the same to cluster.name
+
+	ktSubjectToken := &v1beta1.KTSubjectToken{}
+	err = r.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: ktMachine.Namespace}, ktSubjectToken)
+
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Error(err, "Failed to get KTSubjectTokens associated with cluster", "Name", cluster.Name, "Namespace", cluster.Namespace)
+			return "nil", err
+		}
+		return "", err
+	}
+
+	return ktSubjectToken.Spec.SubjectToken, nil
+
+}
+
+func (r *KTMachineReconciler) GetMachineAssociatedCluster(ctx context.Context, ktMachine *infrastructurev1beta1.KTMachine, req ctrl.Request) (*v1beta1.KTCluster, error) {
+	logger := log.FromContext(ctx, "LogFrom", "Machine")
+
 	ktMachineDeploymentList := &v1beta1.MachineDeploymentList{}
 	err := r.List(ctx, ktMachineDeploymentList, client.InNamespace(ktMachine.Namespace))
 	if err != nil {
 		logger.Error(err, "failed to list MachineDeployments for this machine")
-		return "", err
+		return nil, err
 	}
 
 	// Filter by ownerReferences
@@ -172,42 +223,31 @@ func (r *KTMachineReconciler) getSubjectToken(ctx context.Context, ktMachine *in
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				logger.Error(err, "KTMachineTemplate not found no need to proceed for finding SubjectToken To Auth API", "Name", ownerMachineDeployment.Name, "Namespace", ownerMachineDeployment.Namespace)
-				return "", err
+				return nil, err
 			}
-			return "", err
+			return nil, err
 		}
 
-		var clusterUID types.UID
+		var clusterName string
 
 		for _, ref := range ktMachineTemplate.OwnerReferences {
 			if ref.Kind == "KTCluster" {
-				clusterUID = ref.UID
+				clusterName = ref.Name
 				break
 
 			}
 		}
 
-		ktSubjectTokenList := &v1beta1.KTSubjectTokenList{}
-		if err := r.List(ctx, ktSubjectTokenList, client.InNamespace(ownerMachineDeployment.Namespace)); err != nil {
-			logger.Error(err, "Failed to list KTSubjectTokens")
-			return "", err
+		ktCluster := &v1beta1.KTCluster{}
+		err = r.Get(ctx, types.NamespacedName{Name: clusterName, Namespace: ktMachine.Namespace}, ktCluster)
+		if err != nil {
+			return nil, err
 		}
 
-		for _, token := range ktSubjectTokenList.Items {
-			for _, ref := range token.OwnerReferences {
-				if ref.Kind == "KTCluster" && ref.UID == clusterUID {
-					logger.Info("Found SubjectToken for KTCluster", "ClusterUID", clusterUID)
-					return token.Spec.SubjectToken, nil
-				}
-			}
-		}
-
-		logger.Info("No SubjectToken found for KTCluster", "ClusterUID", clusterUID)
-		return "", nil
-
+		return ktCluster, err
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

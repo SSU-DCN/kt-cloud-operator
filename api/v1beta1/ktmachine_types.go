@@ -43,6 +43,11 @@ type Networks struct {
 	ID string `json:"id,omitempty"`
 }
 
+type AssignedPublicIps struct {
+	IP string `json:"ip,omitempty"`
+	Id string `json:"id,omitempty"`
+}
+
 // KTMachineStatus defines the observed state of KTMachine.
 type KTMachineStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -51,6 +56,8 @@ type KTMachineStatus struct {
 	AdminPass      string           `json:"adminPass,omitempty"`
 	Links          []Links          `json:"links,omitempty"`
 	SecurityGroups []SecurityGroups `json:"securityGroups,omitempty"`
+
+	AssignedPublicIps []AssignedPublicIps `json:"AssignedPublicIPs,omitempty"`
 
 	// New fields
 	TenantID string `json:"tenant_id,omitempty"`

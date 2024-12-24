@@ -8,8 +8,7 @@ metadata:
 spec:
   apiServerLoadBalancer:
     enabled: false
-  externalNetwork:
-    id: 7031a1e3-7435-4cd2-9087-671a995f3bbd
+  controlPlaneExternalNetworkEnable: true
   identityRef:
     cloudName: openstack
     name: edge01-cloud-config

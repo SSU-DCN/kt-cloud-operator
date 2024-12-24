@@ -39,6 +39,16 @@ spec:
           spec:
             description: KTSubjectTokenSpec defines the desired state of KTSubjectToken.
             properties:
+              clusterRef:
+                description: Date         string `json:"date,omitempty"`
+                properties:
+                  apiVersion:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                type: object
               subjectToken:
                 description: Foo is an example field of KTSubjectToken. Edit ktsubjecttoken_types.go
                   to remove/update

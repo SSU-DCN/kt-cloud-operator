@@ -28,11 +28,11 @@ type KTClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	APIServerLoadBalancer APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
-	ExternalNetwork       ExternalNetwork       `json:"externalNetwork,omitempty"`
-	IdentityRef           IdentityRef           `json:"identityRef,omitempty"`
-	ManagedSecurityGroups ManagedSecurityGroups `json:"managedSecurityGroups,omitempty"`
-	ManagedSubnets        []ManagedSubnet       `json:"managedSubnets,omitempty"`
+	APIServerLoadBalancer             APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
+	ControlPlaneExternalNetworkEnable bool                  `json:"controlPlaneExternalNetworkEnable,omitempty"`
+	IdentityRef                       IdentityRef           `json:"identityRef,omitempty"`
+	ManagedSecurityGroups             ManagedSecurityGroups `json:"managedSecurityGroups,omitempty"`
+	ManagedSubnets                    []ManagedSubnet       `json:"managedSubnets,omitempty"`
 }
 
 // APIServerLoadBalancer represents the API server load balancer settings
@@ -41,9 +41,9 @@ type APIServerLoadBalancer struct {
 }
 
 // ExternalNetwork represents the external network configuration
-type ExternalNetwork struct {
-	ID string `json:"id"`
-}
+// type ExternalNetwork struct {
+// 	ID string `json:"id"`
+// }
 
 // IdentityRef holds the identity reference for OpenStack
 type IdentityRef struct {
