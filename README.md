@@ -1,1 +1,1 @@
-# kt-cloud-operator.
+# kt-cloud-operator
